@@ -438,6 +438,7 @@ function App() {
                       <span className="text-2xl font-bold text-orange-400">{catch_item.weight} kg</span>
                     </div>
                     <div className="space-y-1 text-sm text-slate-400">
+                      {catch_item.venue && <p className="text-cyan-400 font-medium">📍 {catch_item.venue}</p>}
                       <p>Peg: {catch_item.peg_number}</p>
                       {catch_item.wraps_count && <p>Wraps: {catch_item.wraps_count}</p>}
                       {catch_item.bait_used && <p>Bait: {catch_item.bait_used}</p>}
