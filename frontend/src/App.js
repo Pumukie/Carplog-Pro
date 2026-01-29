@@ -596,6 +596,22 @@ function App() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-slate-100">Statistics</h2>
               <div className="flex items-center space-x-3">
+                {/* Unit Toggle */}
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
+                  <button
+                    onClick={() => setDisplayUnit('kg')}
+                    className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${displayUnit === 'kg' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    kg
+                  </button>
+                  <button
+                    onClick={() => setDisplayUnit('lb')}
+                    className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${displayUnit === 'lb' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    lb
+                  </button>
+                </div>
+
                 {/* View Toggle */}
                 <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
                   <button
