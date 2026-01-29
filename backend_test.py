@@ -158,7 +158,7 @@ class CarplogAPITester:
         # Test 4: Get catches after creation
         success, updated_catches = self.test_get_catches()
         if success:
-            new_count = len(updated_catches if isinstance(updated_catches, list) else updated_catches.get('data', []))
+            new_count = len(updated_catches) if isinstance(updated_catches, list) else 0
             print(f"   Catches after creation: {new_count}")
 
         # Test 5: Test filtering by current year and month
