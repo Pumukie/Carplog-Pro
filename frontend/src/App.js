@@ -350,29 +350,60 @@ function App() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-2">Weight (kg) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                    required
-                    data-testid="weight-input"
-                  />
+                  <label className="block text-slate-300 mb-2">Weight *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.weight}
+                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                      required
+                      data-testid="weight-input"
+                    />
+                    <select
+                      value={formData.weight_unit}
+                      onChange={(e) => setFormData({ ...formData, weight_unit: e.target.value })}
+                      className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                      data-testid="weight-unit-select"
+                    >
+                      <option value="kg">kg</option>
+                      <option value="lb">lb</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-300 mb-2">Venue (Optional)</label>
-                <input
-                  type="text"
-                  value={formData.venue}
-                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                  placeholder="e.g., Linear Fisheries, Manor Farm Lake"
-                  data-testid="venue-input"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-300 mb-2">Length (Optional)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={formData.length}
+                      onChange={(e) => setFormData({ ...formData, length: e.target.value })}
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                      placeholder="e.g., 85"
+                      data-testid="length-input"
+                    />
+                    <span className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-400 flex items-center">
+                      {formData.weight_unit === 'kg' ? 'cm' : 'in'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 mb-2">Venue (Optional)</label>
+                  <input
+                    type="text"
+                    value={formData.venue}
+                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                    placeholder="e.g., Linear Fisheries"
+                    data-testid="venue-input"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
