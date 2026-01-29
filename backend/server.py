@@ -35,6 +35,7 @@ class Catch(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     fish_name: Optional[str] = None
     weight: float  # in kg
+    venue: Optional[str] = None
     peg_number: str
     wraps_count: Optional[int] = None
     bait_used: Optional[str] = None
@@ -45,6 +46,7 @@ class Catch(BaseModel):
 class CatchCreate(BaseModel):
     fish_name: Optional[str] = None
     weight: float
+    venue: Optional[str] = None
     peg_number: str
     wraps_count: Optional[int] = None
     bait_used: Optional[str] = None
