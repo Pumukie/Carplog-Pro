@@ -356,31 +356,17 @@ function App() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-300 mb-2">Catch Date *</label>
-                  <input
-                    type="date"
-                    value={formData.catch_date}
-                    onChange={(e) => setFormData({ ...formData, catch_date: e.target.value })}
-                    max={new Date().toISOString().split('T')[0]}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                    required
-                    data-testid="catch-date-input"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 mb-2">Catch Time *</label>
-                  <input
-                    type="time"
-                    value={formData.catch_time}
-                    onChange={(e) => setFormData({ ...formData, catch_time: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                    required
-                    data-testid="catch-time-input"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-300 mb-2">Catch Date *</label>
+                <input
+                  type="date"
+                  value={formData.catch_date}
+                  onChange={(e) => setFormData({ ...formData, catch_date: e.target.value })}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                  required
+                  data-testid="catch-date-input"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
