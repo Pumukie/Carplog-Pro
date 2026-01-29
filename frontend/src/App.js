@@ -286,15 +286,25 @@ function App() {
                   {getFilteredCatches().map((catch_item) => (
                     <div key={catch_item.id} className="bg-slate-900/50 border border-slate-700 rounded-lg overflow-hidden" data-testid="recent-catch-card">
                       {catch_item.photo_base64 && (
-                        <img src={catch_item.photo_base64} alt="Catch" className="w-full h-48 object-cover" />
+                        <img 
+                          src={catch_item.photo_base64} 
+                          alt="Catch" 
+                          className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                          onClick={() => setModalImage(catch_item.photo_base64)}
+                        />
                       )}
                       <div className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="text-lg font-semibold text-emerald-400">{catch_item.fish_name || 'Unnamed'}</h4>
-                          <span className="text-2xl font-bold text-orange-400">{catch_item.weight} kg</span>
+                          <span className="text-2xl font-bold text-orange-400">{formatWeight(catch_item.weight, catch_item.weight_unit)}</span>
                         </div>
+                        {catch_item.length && (
+                          <p className="text-amber-400 text-sm font-medium">
+                            📏 {catch_item.length} {catch_item.weight_unit === 'kg' ? 'cm' : 'in'}
+                          </p>
+                        )}
                         {catch_item.venue && <p className="text-cyan-400 text-sm font-medium mb-1">📍 {catch_item.venue}</p>}
-                        <p className="text-slate-400 text-sm">Peg: {catch_item.peg_number}</p>
+                        {catch_item.peg_number && <p className="text-slate-400 text-sm">Peg: {catch_item.peg_number}</p>}
                         {catch_item.bait_used && <p className="text-slate-400 text-sm">Bait: {catch_item.bait_used}</p>}
                         <p className="text-slate-500 text-xs mt-2">{new Date(catch_item.caught_at).toLocaleDateString()}</p>
                       </div>
