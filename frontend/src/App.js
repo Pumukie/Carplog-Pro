@@ -290,8 +290,10 @@ function App() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-400 text-sm">Total Weight</p>
-                    <p className="text-3xl font-bold text-cyan-400" data-testid="month-total">{getDashboardMonthStats().total_weight.toFixed(2)}</p>
-                    <p className="text-slate-500 text-xs mt-1">kg this month</p>
+                    <p className="text-3xl font-bold text-cyan-400" data-testid="month-total">
+                      {convertWeight(getDashboardMonthStats().total_weight, 'kg', displayUnit).toFixed(2)}
+                    </p>
+                    <p className="text-slate-500 text-xs mt-1">{displayUnit} this month</p>
                   </div>
                   <TrendingUp className="w-12 h-12 text-cyan-500/30" />
                 </div>
@@ -301,8 +303,10 @@ function App() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-400 text-sm">Average Weight</p>
-                    <p className="text-3xl font-bold text-orange-400" data-testid="month-avg">{getDashboardMonthStats().average_weight.toFixed(2)}</p>
-                    <p className="text-slate-500 text-xs mt-1">kg</p>
+                    <p className="text-3xl font-bold text-orange-400" data-testid="month-avg">
+                      {convertWeight(getDashboardMonthStats().average_weight, 'kg', displayUnit).toFixed(2)}
+                    </p>
+                    <p className="text-slate-500 text-xs mt-1">{displayUnit}</p>
                   </div>
                   <Weight className="w-12 h-12 text-orange-500/30" />
                 </div>
@@ -314,8 +318,10 @@ function App() {
                     <p className="text-slate-400 text-sm">Biggest Catch</p>
                     {getDashboardMonthStats().biggest_catch ? (
                       <>
-                        <p className="text-3xl font-bold text-amber-400" data-testid="month-biggest">{getDashboardMonthStats().biggest_catch.weight}</p>
-                        <p className="text-slate-500 text-xs mt-1">{getDashboardMonthStats().biggest_catch.fish_name || 'kg'}</p>
+                        <p className="text-3xl font-bold text-amber-400" data-testid="month-biggest">
+                          {convertWeight(getDashboardMonthStats().biggest_catch.weight, 'kg', displayUnit).toFixed(2)}
+                        </p>
+                        <p className="text-slate-500 text-xs mt-1">{getDashboardMonthStats().biggest_catch.fish_name || displayUnit}</p>
                       </>
                     ) : (
                       <p className="text-2xl font-bold text-slate-600">—</p>
