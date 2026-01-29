@@ -83,12 +83,21 @@ function App() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Combine date and time into ISO format
+      const catchDateTime = new Date(`${formData.catch_date}T${formData.catch_time}`).toISOString();
+      
       const submitData = {
         ...formData,
         weight: parseFloat(formData.weight),
+        length: formData.length ? parseFloat(formData.length) : null,
         wraps_count: formData.wraps_count ? parseInt(formData.wraps_count) : null,
-        caught_at: new Date().toISOString()
+        caught_at: catchDateTime
       };
+      
+      // Remove the separate date/time fields before sending
+      delete submitData.catch_date;
+      delete submitData.catch_time;
+      
       await axios.post(`${API}/catches`, submitData);
       setFormData({
         fish_name: '',
@@ -100,7 +109,9 @@ function App() {
         wraps_count: '',
         bait_used: '',
         notes: '',
-        photo_base64: ''
+        photo_base64: '',
+        catch_date: new Date().toISOString().split('T')[0],
+        catch_time: new Date().toTimeString().slice(0, 5)
       });
       await loadData();
       setActiveTab('catches');
