@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-01-29T21:32:17.784895",
+  "total_tests": 14,
+  "passed_tests": 14,
+  "success_rate": "100.0%",
+  "results": [
+    {
+      "test": "Get Catches",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Yearly Stats",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Monthly Stats",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Create Basic Catch",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "test": "Create Catch with Photo",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "test": "Get All Catches",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Find Catch ffee6645...",
+      "success": true,
+      "details": ""
+    },
+    {
+      "test": "Find Catch d439d054...",
+      "success": true,
+      "details": ""
+    },
+    {
+      "test": "Photo Test - Small PNG Image",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "test": "Cleanup Photo Test Small PNG Image",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Photo Test - Large Base64 String",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "test": "Cleanup Photo Test Large Base64 String",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Delete Catch ffee6645...",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Delete Catch d439d054...",
+      "success": true,
+      "details": "Status: 200"
+    }
+  ]
+}
