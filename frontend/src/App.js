@@ -349,6 +349,18 @@ function App() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-slate-300 mb-2">Venue (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                  placeholder="e.g., Linear Fisheries, Manor Farm Lake"
+                  data-testid="venue-input"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-slate-300 mb-2">Peg Number *</label>
