@@ -31,7 +31,7 @@ function App() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedYear]);
+  }, [selectedYear, dashboardYear, dashboardMonth]);
 
   const loadData = async () => {
     try {
@@ -46,6 +46,19 @@ function App() {
     } catch (error) {
       console.error('Error loading data:', error);
     }
+  };
+
+  const getFilteredCatches = () => {
+    return catches.filter(catch_item => {
+      const catchDate = new Date(catch_item.caught_at);
+      return catchDate.getFullYear() === dashboardYear && 
+             catchDate.getMonth() + 1 === dashboardMonth;
+    });
+  };
+
+  const getDashboardMonthStats = () => {
+    return monthlyStats.find(s => s.month === dashboardMonth && s.year === dashboardYear) || 
+           { total_count: 0, total_weight: 0, average_weight: 0, biggest_catch: null };
   };
 
   const handleImageUpload = (e) => {
