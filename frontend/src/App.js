@@ -448,8 +448,15 @@ function App() {
                   onChange={handleImageUpload}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-300"
                   data-testid="photo-input"
+                  disabled={uploadingImage}
                 />
-                {formData.photo_base64 && (
+                {uploadingImage && (
+                  <div className="mt-2 flex items-center space-x-2 text-emerald-400">
+                    <div className="animate-spin w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full"></div>
+                    <span>Processing image...</span>
+                  </div>
+                )}
+                {formData.photo_base64 && !uploadingImage && (
                   <img src={formData.photo_base64} alt="Preview" className="mt-2 max-h-48 rounded-lg" />
                 )}
               </div>
