@@ -593,11 +593,11 @@ function App() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingImage}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
                 data-testid="submit-catch-btn"
               >
-                {loading ? 'Adding...' : 'Log Catch'}
+                {loading ? 'Adding...' : uploadingImage ? 'Processing Image...' : 'Log Catch'}
               </button>
             </form>
           </div>
