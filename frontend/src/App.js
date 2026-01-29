@@ -136,6 +136,13 @@ function App() {
     return new Date(2000, monthNum - 1, 1).toLocaleDateString('en-US', { month: 'long' });
   };
 
+  const formatWeight = (weight, unit) => {
+    if (unit === 'lb') {
+      return `${weight} lb`;
+    }
+    return `${weight} kg`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">
       {/* Header */}
