@@ -115,11 +115,17 @@ function App() {
 
   const getCurrentMonthStats = () => {
     const currentMonth = new Date().getMonth() + 1;
-    return monthlyStats.find(s => s.month === currentMonth) || { total_count: 0, total_weight: 0, average_weight: 0 };
+    const currentYear = new Date().getFullYear();
+    return monthlyStats.find(s => s.month === currentMonth && s.year === currentYear) || 
+           { total_count: 0, total_weight: 0, average_weight: 0 };
   };
 
   const getCurrentYearStats = () => {
     return yearlyStats.find(s => s.year === selectedYear) || { total_count: 0, total_weight: 0, average_weight: 0 };
+  };
+
+  const getMonthName = (monthNum) => {
+    return new Date(2000, monthNum - 1, 1).toLocaleDateString('en-US', { month: 'long' });
   };
 
   return (
