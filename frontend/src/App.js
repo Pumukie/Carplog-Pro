@@ -31,8 +31,7 @@ function App() {
     bait_used: '',
     notes: '',
     photo_base64: '',
-    catch_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-    catch_time: new Date().toTimeString().slice(0, 5) // HH:MM format
+    catch_date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
   });
 
   useEffect(() => {
