@@ -27,6 +27,7 @@ function App() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
 
   const loadData = async () => {
