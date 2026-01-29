@@ -34,7 +34,7 @@ class Catch(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     fish_name: Optional[str] = None
-    weight: float
+    weight: Optional[float] = None
     weight_unit: str = "kg"  # "kg" or "lb"
     length: Optional[float] = None  # in cm or inches
     venue: Optional[str] = None
@@ -47,7 +47,7 @@ class Catch(BaseModel):
 
 class CatchCreate(BaseModel):
     fish_name: Optional[str] = None
-    weight: float
+    weight: Optional[float] = None
     weight_unit: str = "kg"
     length: Optional[float] = None
     venue: Optional[str] = None
