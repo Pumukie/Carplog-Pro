@@ -408,13 +408,12 @@ function App() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-300 mb-2">Peg Number *</label>
+                  <label className="block text-slate-300 mb-2">Peg Number (Optional)</label>
                   <input
                     type="text"
                     value={formData.peg_number}
                     onChange={(e) => setFormData({ ...formData, peg_number: e.target.value })}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                    required
                     data-testid="peg-input"
                   />
                 </div>
