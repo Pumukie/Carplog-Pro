@@ -229,8 +229,25 @@ function App() {
             <div className="flex justify-between items-center">
               <h2 className="text-3xl font-bold text-slate-100">Dashboard</h2>
               
-              {/* Month/Year Selector */}
               <div className="flex items-center space-x-3">
+                {/* Unit Toggle */}
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
+                  <button
+                    onClick={() => setDisplayUnit('kg')}
+                    className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${displayUnit === 'kg' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                    data-testid="kg-unit-btn"
+                  >
+                    kg
+                  </button>
+                  <button
+                    onClick={() => setDisplayUnit('lb')}
+                    className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${displayUnit === 'lb' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                    data-testid="lb-unit-btn"
+                  >
+                    lb
+                  </button>
+                </div>
+
                 <Calendar className="w-5 h-5 text-emerald-400" />
                 <select
                   value={dashboardMonth}
