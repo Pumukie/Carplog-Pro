@@ -71,9 +71,55 @@ function App() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Compress image before converting to base64
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      img.onload = () => {
+        // Max dimensions for compressed image
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        
+        let { width, height } = img;
+        
+        // Calculate new dimensions while maintaining aspect ratio
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with compression (quality 0.7)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        setFormData(prev => ({ ...prev, photo_base64: compressedBase64 }));
+      };
+      
+      img.onerror = () => {
+        console.error('Error loading image');
+        alert('Error loading image. Please try another file.');
+      };
+      
+      // Load image from file
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, photo_base64: reader.result });
+      reader.onload = (event) => {
+        img.src = event.target.result;
+      };
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Error reading file. Please try again.');
       };
       reader.readAsDataURL(file);
     }
