@@ -34,9 +34,11 @@ class Catch(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     fish_name: Optional[str] = None
-    weight: float  # in kg
+    weight: float
+    weight_unit: str = "kg"  # "kg" or "lb"
+    length: Optional[float] = None  # in cm or inches
     venue: Optional[str] = None
-    peg_number: str
+    peg_number: Optional[str] = None
     wraps_count: Optional[int] = None
     bait_used: Optional[str] = None
     photo_base64: Optional[str] = None  # Base64 encoded image
@@ -46,8 +48,10 @@ class Catch(BaseModel):
 class CatchCreate(BaseModel):
     fish_name: Optional[str] = None
     weight: float
+    weight_unit: str = "kg"
+    length: Optional[float] = None
     venue: Optional[str] = None
-    peg_number: str
+    peg_number: Optional[str] = None
     wraps_count: Optional[int] = None
     bait_used: Optional[str] = None
     photo_base64: Optional[str] = None
