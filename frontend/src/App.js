@@ -12,6 +12,9 @@ function App() {
   const [yearlyStats, setYearlyStats] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
+  const [dashboardYear, setDashboardYear] = useState(new Date().getFullYear());
+  const [dashboardMonth, setDashboardMonth] = useState(new Date().getMonth() + 1);
   const [loading, setLoading] = useState(false);
 
   // Form state
