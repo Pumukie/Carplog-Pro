@@ -21,6 +21,7 @@ function App() {
   const [formData, setFormData] = useState({
     fish_name: '',
     weight: '',
+    venue: '',
     peg_number: '',
     wraps_count: '',
     bait_used: '',
