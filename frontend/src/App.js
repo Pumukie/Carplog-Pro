@@ -91,6 +91,8 @@ function App() {
       setFormData({
         fish_name: '',
         weight: '',
+        weight_unit: 'kg',
+        length: '',
         venue: '',
         peg_number: '',
         wraps_count: '',
