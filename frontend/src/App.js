@@ -675,15 +675,17 @@ function App() {
           onClick={() => setModalImage(null)}
           data-testid="image-modal"
         >
+          {/* Close Button - Top Right of Screen */}
+          <button
+            onClick={() => setModalImage(null)}
+            className="fixed top-4 right-4 bg-slate-800/90 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-3xl font-bold transition-colors shadow-lg z-10"
+            data-testid="close-modal-btn"
+            title="Close (or click outside)"
+          >
+            ×
+          </button>
+          
           <div className="relative max-w-6xl max-h-screen">
-            <button
-              onClick={() => setModalImage(null)}
-              className="absolute -top-10 -right-10 bg-slate-800/80 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold transition-colors shadow-lg"
-              data-testid="close-modal-btn"
-              title="Close"
-            >
-              ×
-            </button>
             <img 
               src={modalImage} 
               alt="Full size catch" 
