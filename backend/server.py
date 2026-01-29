@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, File, UploadFile
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,9 +6,11 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+import base64
+from collections import defaultdict
 
 
 ROOT_DIR = Path(__file__).parent
@@ -27,44 +29,212 @@ api_router = APIRouter(prefix="/api")
 
 
 # Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+class Catch(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    fish_name: Optional[str] = None
+    weight: float  # in kg
+    peg_number: str
+    wraps_count: Optional[int] = None
+    bait_used: Optional[str] = None
+    photo_base64: Optional[str] = None  # Base64 encoded image
+    caught_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    notes: Optional[str] = None
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class CatchCreate(BaseModel):
+    fish_name: Optional[str] = None
+    weight: float
+    peg_number: str
+    wraps_count: Optional[int] = None
+    bait_used: Optional[str] = None
+    photo_base64: Optional[str] = None
+    caught_at: Optional[datetime] = None
+    notes: Optional[str] = None
 
-# Add your routes to the router instead of directly to app
+class MonthlyStats(BaseModel):
+    month: int
+    year: int
+    total_count: int
+    total_weight: float
+    average_weight: float
+    biggest_catch: Optional[dict] = None
+
+class YearlyStats(BaseModel):
+    year: int
+    total_count: int
+    total_weight: float
+    average_weight: float
+    biggest_catch: Optional[dict] = None
+
+
+# Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Welcome to Carplog-pro API"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+
+@api_router.post("/catches", response_model=Catch)
+async def create_catch(catch_input: CatchCreate):
+    """Log a new catch"""
+    catch_dict = catch_input.model_dump()
+    
+    # Create catch object with generated ID
+    catch_obj = Catch(**catch_dict)
     
     # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
+    doc = catch_obj.model_dump()
+    doc['caught_at'] = doc['caught_at'].isoformat()
     
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    await db.catches.insert_one(doc)
+    return catch_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+
+@api_router.get("/catches", response_model=List[Catch])
+async def get_catches(
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+    limit: int = 100
+):
+    """Get all catches with optional filters"""
+    query = {}
+    
+    # Build query based on filters
+    if year or month:
+        date_filter = {}
+        if year and month:
+            # Filter by specific month and year
+            start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+            if month == 12:
+                end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+            else:
+                end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+            query['caught_at'] = {
+                '$gte': start_date.isoformat(),
+                '$lt': end_date.isoformat()
+            }
+        elif year:
+            # Filter by year only
+            start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+            query['caught_at'] = {
+                '$gte': start_date.isoformat(),
+                '$lt': end_date.isoformat()
+            }
+    
+    catches = await db.catches.find(query, {"_id": 0}).sort('caught_at', -1).to_list(limit)
     
     # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    for catch in catches:
+        if isinstance(catch['caught_at'], str):
+            catch['caught_at'] = datetime.fromisoformat(catch['caught_at'])
     
-    return status_checks
+    return catches
+
+
+@api_router.delete("/catches/{catch_id}")
+async def delete_catch(catch_id: str):
+    """Delete a catch"""
+    result = await db.catches.delete_one({"id": catch_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Catch not found")
+    return {"message": "Catch deleted successfully"}
+
+
+@api_router.get("/stats/monthly", response_model=List[MonthlyStats])
+async def get_monthly_stats(year: int):
+    """Get monthly statistics for a given year"""
+    start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    
+    catches = await db.catches.find({
+        'caught_at': {
+            '$gte': start_date.isoformat(),
+            '$lt': end_date.isoformat()
+        }
+    }, {"_id": 0}).to_list(10000)
+    
+    # Convert ISO strings to datetime
+    for catch in catches:
+        if isinstance(catch['caught_at'], str):
+            catch['caught_at'] = datetime.fromisoformat(catch['caught_at'])
+    
+    # Group by month
+    monthly_data = defaultdict(list)
+    for catch in catches:
+        month = catch['caught_at'].month
+        monthly_data[month].append(catch)
+    
+    # Calculate stats for each month
+    stats = []
+    for month in range(1, 13):
+        month_catches = monthly_data.get(month, [])
+        if month_catches:
+            total_weight = sum(c['weight'] for c in month_catches)
+            biggest = max(month_catches, key=lambda x: x['weight'])
+            stats.append(MonthlyStats(
+                month=month,
+                year=year,
+                total_count=len(month_catches),
+                total_weight=round(total_weight, 2),
+                average_weight=round(total_weight / len(month_catches), 2),
+                biggest_catch={
+                    'id': biggest['id'],
+                    'weight': biggest['weight'],
+                    'fish_name': biggest.get('fish_name'),
+                    'caught_at': biggest['caught_at'].isoformat()
+                }
+            ))
+        else:
+            stats.append(MonthlyStats(
+                month=month,
+                year=year,
+                total_count=0,
+                total_weight=0.0,
+                average_weight=0.0,
+                biggest_catch=None
+            ))
+    
+    return stats
+
+
+@api_router.get("/stats/yearly", response_model=List[YearlyStats])
+async def get_yearly_stats():
+    """Get yearly statistics for all years"""
+    catches = await db.catches.find({}, {"_id": 0}).to_list(10000)
+    
+    # Convert ISO strings to datetime
+    for catch in catches:
+        if isinstance(catch['caught_at'], str):
+            catch['caught_at'] = datetime.fromisoformat(catch['caught_at'])
+    
+    # Group by year
+    yearly_data = defaultdict(list)
+    for catch in catches:
+        year = catch['caught_at'].year
+        yearly_data[year].append(catch)
+    
+    # Calculate stats for each year
+    stats = []
+    for year in sorted(yearly_data.keys(), reverse=True):
+        year_catches = yearly_data[year]
+        total_weight = sum(c['weight'] for c in year_catches)
+        biggest = max(year_catches, key=lambda x: x['weight'])
+        stats.append(YearlyStats(
+            year=year,
+            total_count=len(year_catches),
+            total_weight=round(total_weight, 2),
+            average_weight=round(total_weight / len(year_catches), 2),
+            biggest_catch={
+                'id': biggest['id'],
+                'weight': biggest['weight'],
+                'fish_name': biggest.get('fish_name'),
+                'caught_at': biggest['caught_at'].isoformat()
+            }
+        ))
+    
+    return stats
+
 
 # Include the router in the main app
 app.include_router(api_router)
