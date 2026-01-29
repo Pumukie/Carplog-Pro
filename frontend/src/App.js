@@ -526,81 +526,144 @@ function App() {
           <div data-testid="stats-view">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-slate-100">Statistics</h2>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                data-testid="year-selector"
-              >
-                {yearlyStats.map((stat) => (
-                  <option key={stat.year} value={stat.year}>{stat.year}</option>
-                ))}
-                {yearlyStats.length === 0 && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
-              </select>
-            </div>
-
-            {/* Yearly Summary */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6 mb-6">
-              <h3 className="text-xl font-bold text-slate-100 mb-4">{selectedYear} Summary</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-slate-400 text-sm">Total Catches</p>
-                  <p className="text-3xl font-bold text-emerald-400" data-testid="year-total-count">{getCurrentYearStats().total_count}</p>
+              <div className="flex items-center space-x-3">
+                {/* View Toggle */}
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
+                  <button
+                    onClick={() => setStatsView('monthly')}
+                    className={`px-4 py-2 rounded-md transition-colors ${statsView === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                    data-testid="monthly-view-btn"
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setStatsView('yearly')}
+                    className={`px-4 py-2 rounded-md transition-colors ${statsView === 'yearly' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                    data-testid="yearly-view-btn"
+                  >
+                    Yearly
+                  </button>
                 </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Total Weight</p>
-                  <p className="text-3xl font-bold text-cyan-400" data-testid="year-total-weight">{getCurrentYearStats().total_weight.toFixed(2)} kg</p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Average Weight</p>
-                  <p className="text-3xl font-bold text-orange-400" data-testid="year-avg-weight">{getCurrentYearStats().average_weight.toFixed(2)} kg</p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Biggest Catch</p>
-                  {getCurrentYearStats().biggest_catch && (
-                    <div data-testid="year-biggest-catch">
-                      <p className="text-3xl font-bold text-amber-400">{getCurrentYearStats().biggest_catch.weight} kg</p>
-                      <p className="text-slate-500 text-xs">{getCurrentYearStats().biggest_catch.fish_name || 'Unnamed'}</p>
-                    </div>
-                  )}
-                </div>
+                
+                {/* Year Selector (shown for monthly view) */}
+                {statsView === 'monthly' && (
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                    data-testid="year-selector"
+                  >
+                    {yearlyStats.map((stat) => (
+                      <option key={stat.year} value={stat.year}>{stat.year}</option>
+                    ))}
+                    {yearlyStats.length === 0 && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
+                  </select>
+                )}
               </div>
             </div>
 
-            {/* Monthly Breakdown */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-slate-100 mb-4">Monthly Breakdown</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {monthlyStats.map((stat) => (
-                  <div key={stat.month} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-testid="month-stat-card">
-                    <h4 className="text-lg font-semibold text-emerald-400 mb-3">
-                      {new Date(stat.year, stat.month - 1).toLocaleDateString('en-US', { month: 'long' })}
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Catches:</span>
-                        <span className="text-slate-100 font-semibold">{stat.total_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Total:</span>
-                        <span className="text-slate-100 font-semibold">{stat.total_weight.toFixed(2)} kg</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Average:</span>
-                        <span className="text-slate-100 font-semibold">{stat.average_weight.toFixed(2)} kg</span>
-                      </div>
-                      {stat.biggest_catch && (
-                        <div className="mt-3 pt-3 border-t border-slate-700">
-                          <p className="text-amber-400 text-xs mb-1">Biggest:</p>
-                          <p className="text-amber-300 font-bold">{stat.biggest_catch.weight} kg</p>
-                          <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
+            {/* Monthly View */}
+            {statsView === 'monthly' && (
+              <>
+                {/* Year Summary */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold text-slate-100 mb-4">{selectedYear} Summary</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-slate-400 text-sm">Total Catches</p>
+                      <p className="text-3xl font-bold text-emerald-400" data-testid="year-total-count">{getCurrentYearStats().total_count}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-sm">Total Weight</p>
+                      <p className="text-3xl font-bold text-cyan-400" data-testid="year-total-weight">{getCurrentYearStats().total_weight.toFixed(2)} kg</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-sm">Average Weight</p>
+                      <p className="text-3xl font-bold text-orange-400" data-testid="year-avg-weight">{getCurrentYearStats().average_weight.toFixed(2)} kg</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-sm">Biggest Catch</p>
+                      {getCurrentYearStats().biggest_catch && (
+                        <div data-testid="year-biggest-catch">
+                          <p className="text-3xl font-bold text-amber-400">{getCurrentYearStats().biggest_catch.weight} kg</p>
+                          <p className="text-slate-500 text-xs">{getCurrentYearStats().biggest_catch.fish_name || 'Unnamed'}</p>
                         </div>
                       )}
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Monthly Breakdown */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                  <h3 className="text-xl font-bold text-slate-100 mb-4">Monthly Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {monthlyStats.map((stat) => (
+                      <div key={stat.month} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-testid="month-stat-card">
+                        <h4 className="text-lg font-semibold text-emerald-400 mb-3">
+                          {new Date(stat.year, stat.month - 1).toLocaleDateString('en-US', { month: 'long' })}
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Catches:</span>
+                            <span className="text-slate-100 font-semibold">{stat.total_count}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Total:</span>
+                            <span className="text-slate-100 font-semibold">{stat.total_weight.toFixed(2)} kg</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Average:</span>
+                            <span className="text-slate-100 font-semibold">{stat.average_weight.toFixed(2)} kg</span>
+                          </div>
+                          {stat.biggest_catch && (
+                            <div className="mt-3 pt-3 border-t border-slate-700">
+                              <p className="text-amber-400 text-xs mb-1">Biggest:</p>
+                              <p className="text-amber-300 font-bold">{stat.biggest_catch.weight} kg</p>
+                              <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Yearly View */}
+            {statsView === 'yearly' && (
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-slate-100 mb-4">All Years Summary</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {yearlyStats.map((stat) => (
+                    <div key={stat.year} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-testid="year-stat-card">
+                      <h4 className="text-2xl font-bold text-emerald-400 mb-3">{stat.year}</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Total Catches:</span>
+                          <span className="text-slate-100 font-semibold">{stat.total_count}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Total Weight:</span>
+                          <span className="text-slate-100 font-semibold">{stat.total_weight.toFixed(2)} kg</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Average:</span>
+                          <span className="text-slate-100 font-semibold">{stat.average_weight.toFixed(2)} kg</span>
+                        </div>
+                        {stat.biggest_catch && (
+                          <div className="mt-3 pt-3 border-t border-slate-700">
+                            <p className="text-amber-400 text-xs mb-1">Biggest Catch:</p>
+                            <p className="text-amber-300 font-bold">{stat.biggest_catch.weight} kg</p>
+                            <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </main>
