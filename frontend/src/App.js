@@ -154,6 +154,28 @@ function App() {
     return `${weight} kg`;
   };
 
+  const convertWeight = (weight, fromUnit, toUnit) => {
+    if (!weight) return 0;
+    if (fromUnit === toUnit) return weight;
+    
+    // Convert to kg first if needed
+    let weightInKg = weight;
+    if (fromUnit === 'lb') {
+      weightInKg = weight / 2.20462;
+    }
+    
+    // Convert to target unit
+    if (toUnit === 'lb') {
+      return weightInKg * 2.20462;
+    }
+    return weightInKg;
+  };
+
+  const displayWeight = (weight, originalUnit = 'kg') => {
+    const converted = convertWeight(weight, originalUnit, displayUnit);
+    return `${converted.toFixed(2)} ${displayUnit}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">
       {/* Header */}
