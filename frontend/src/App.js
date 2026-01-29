@@ -280,6 +280,7 @@ function App() {
                           <h4 className="text-lg font-semibold text-emerald-400">{catch_item.fish_name || 'Unnamed'}</h4>
                           <span className="text-2xl font-bold text-orange-400">{catch_item.weight} kg</span>
                         </div>
+                        {catch_item.venue && <p className="text-cyan-400 text-sm font-medium mb-1">📍 {catch_item.venue}</p>}
                         <p className="text-slate-400 text-sm">Peg: {catch_item.peg_number}</p>
                         {catch_item.bait_used && <p className="text-slate-400 text-sm">Bait: {catch_item.bait_used}</p>}
                         <p className="text-slate-500 text-xs mt-2">{new Date(catch_item.caught_at).toLocaleDateString()}</p>
