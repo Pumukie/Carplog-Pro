@@ -82,20 +82,19 @@ function App() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Combine date and time into ISO format
-      const catchDateTime = new Date(`${formData.catch_date}T${formData.catch_time}`).toISOString();
+      // Set catch time to noon (12:00) of the selected date
+      const catchDateTime = new Date(`${formData.catch_date}T12:00:00`).toISOString();
       
       const submitData = {
         ...formData,
-        weight: parseFloat(formData.weight),
+        weight: formData.weight ? parseFloat(formData.weight) : 0,
         length: formData.length ? parseFloat(formData.length) : null,
         wraps_count: formData.wraps_count ? parseInt(formData.wraps_count) : null,
         caught_at: catchDateTime
       };
       
-      // Remove the separate date/time fields before sending
+      // Remove the catch_date field before sending
       delete submitData.catch_date;
-      delete submitData.catch_time;
       
       await axios.post(`${API}/catches`, submitData);
       setFormData({
@@ -109,8 +108,7 @@ function App() {
         bait_used: '',
         notes: '',
         photo_base64: '',
-        catch_date: new Date().toISOString().split('T')[0],
-        catch_time: new Date().toTimeString().slice(0, 5)
+        catch_date: new Date().toISOString().split('T')[0]
       });
       await loadData();
       setActiveTab('catches');
