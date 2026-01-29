@@ -178,15 +178,43 @@ function App() {
         {/* Dashboard */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6" data-testid="dashboard-view">
-            <h2 className="text-3xl font-bold text-slate-100 mb-6">Dashboard</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-bold text-slate-100">Dashboard</h2>
+              
+              {/* Month/Year Selector */}
+              <div className="flex items-center space-x-3">
+                <Calendar className="w-5 h-5 text-emerald-400" />
+                <select
+                  value={dashboardMonth}
+                  onChange={(e) => setDashboardMonth(parseInt(e.target.value))}
+                  className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                  data-testid="dashboard-month-selector"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(month => (
+                    <option key={month} value={month}>{getMonthName(month)}</option>
+                  ))}
+                </select>
+                <select
+                  value={dashboardYear}
+                  onChange={(e) => setDashboardYear(parseInt(e.target.value))}
+                  className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                  data-testid="dashboard-year-selector"
+                >
+                  {yearlyStats.map((stat) => (
+                    <option key={stat.year} value={stat.year}>{stat.year}</option>
+                  ))}
+                  {yearlyStats.length === 0 && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
+                </select>
+              </div>
+            </div>
             
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-slate-400 text-sm">This Month</p>
-                    <p className="text-3xl font-bold text-emerald-400" data-testid="month-count">{getCurrentMonthStats().total_count}</p>
+                    <p className="text-slate-400 text-sm">{getMonthName(dashboardMonth)} {dashboardYear}</p>
+                    <p className="text-3xl font-bold text-emerald-400" data-testid="month-count">{getDashboardMonthStats().total_count}</p>
                     <p className="text-slate-500 text-xs mt-1">catches</p>
                   </div>
                   <Fish className="w-12 h-12 text-emerald-500/30" />
@@ -196,9 +224,9 @@ function App() {
               <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-slate-400 text-sm">This Year</p>
-                    <p className="text-3xl font-bold text-cyan-400" data-testid="year-count">{getCurrentYearStats().total_count}</p>
-                    <p className="text-slate-500 text-xs mt-1">catches</p>
+                    <p className="text-slate-400 text-sm">Total Weight</p>
+                    <p className="text-3xl font-bold text-cyan-400" data-testid="month-total">{getDashboardMonthStats().total_weight.toFixed(2)}</p>
+                    <p className="text-slate-500 text-xs mt-1">kg this month</p>
                   </div>
                   <TrendingUp className="w-12 h-12 text-cyan-500/30" />
                 </div>
@@ -207,8 +235,8 @@ function App() {
               <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-slate-400 text-sm">Month Avg</p>
-                    <p className="text-3xl font-bold text-orange-400" data-testid="month-avg">{getCurrentMonthStats().average_weight.toFixed(2)}</p>
+                    <p className="text-slate-400 text-sm">Average Weight</p>
+                    <p className="text-3xl font-bold text-orange-400" data-testid="month-avg">{getDashboardMonthStats().average_weight.toFixed(2)}</p>
                     <p className="text-slate-500 text-xs mt-1">kg</p>
                   </div>
                   <Weight className="w-12 h-12 text-orange-500/30" />
@@ -218,36 +246,57 @@ function App() {
               <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-slate-400 text-sm">Total Weight</p>
-                    <p className="text-3xl font-bold text-amber-400" data-testid="month-total">{getCurrentMonthStats().total_weight.toFixed(2)}</p>
-                    <p className="text-slate-500 text-xs mt-1">kg this month</p>
+                    <p className="text-slate-400 text-sm">Biggest Catch</p>
+                    {getDashboardMonthStats().biggest_catch ? (
+                      <>
+                        <p className="text-3xl font-bold text-amber-400" data-testid="month-biggest">{getDashboardMonthStats().biggest_catch.weight}</p>
+                        <p className="text-slate-500 text-xs mt-1">{getDashboardMonthStats().biggest_catch.fish_name || 'kg'}</p>
+                      </>
+                    ) : (
+                      <p className="text-2xl font-bold text-slate-600">—</p>
+                    )}
                   </div>
                   <Award className="w-12 h-12 text-amber-500/30" />
                 </div>
               </div>
             </div>
 
-            {/* Recent Catches */}
+            {/* Month Catches */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-slate-100 mb-4">Recent Catches</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {catches.slice(0, 6).map((catch_item) => (
-                  <div key={catch_item.id} className="bg-slate-900/50 border border-slate-700 rounded-lg overflow-hidden" data-testid="recent-catch-card">
-                    {catch_item.photo_base64 && (
-                      <img src={catch_item.photo_base64} alt="Catch" className="w-full h-48 object-cover" />
-                    )}
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-lg font-semibold text-emerald-400">{catch_item.fish_name || 'Unnamed'}</h4>
-                        <span className="text-2xl font-bold text-orange-400">{catch_item.weight} kg</span>
+              <h3 className="text-xl font-bold text-slate-100 mb-4">
+                {getMonthName(dashboardMonth)} {dashboardYear} Catches ({getFilteredCatches().length})
+              </h3>
+              {getFilteredCatches().length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {getFilteredCatches().map((catch_item) => (
+                    <div key={catch_item.id} className="bg-slate-900/50 border border-slate-700 rounded-lg overflow-hidden" data-testid="recent-catch-card">
+                      {catch_item.photo_base64 && (
+                        <img src={catch_item.photo_base64} alt="Catch" className="w-full h-48 object-cover" />
+                      )}
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-lg font-semibold text-emerald-400">{catch_item.fish_name || 'Unnamed'}</h4>
+                          <span className="text-2xl font-bold text-orange-400">{catch_item.weight} kg</span>
+                        </div>
+                        <p className="text-slate-400 text-sm">Peg: {catch_item.peg_number}</p>
+                        {catch_item.bait_used && <p className="text-slate-400 text-sm">Bait: {catch_item.bait_used}</p>}
+                        <p className="text-slate-500 text-xs mt-2">{new Date(catch_item.caught_at).toLocaleDateString()}</p>
                       </div>
-                      <p className="text-slate-400 text-sm">Peg: {catch_item.peg_number}</p>
-                      {catch_item.bait_used && <p className="text-slate-400 text-sm">Bait: {catch_item.bait_used}</p>}
-                      <p className="text-slate-500 text-xs mt-2">{new Date(catch_item.caught_at).toLocaleDateString()}</p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Fish className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+                  <p className="text-slate-500">No catches recorded for {getMonthName(dashboardMonth)} {dashboardYear}</p>
+                  <button
+                    onClick={() => setActiveTab('add')}
+                    className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  >
+                    Log Your First Catch
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
