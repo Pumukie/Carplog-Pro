@@ -383,7 +383,7 @@ function App() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-2">Weight *</label>
+                  <label className="block text-slate-300 mb-2">Weight (Optional)</label>
                   <div className="flex gap-2">
                     <input
                       type="number"
@@ -391,8 +391,8 @@ function App() {
                       value={formData.weight}
                       onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                       className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                      required
                       data-testid="weight-input"
+                      placeholder="0"
                     />
                     <select
                       value={formData.weight_unit}
