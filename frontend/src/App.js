@@ -678,15 +678,16 @@ function App() {
           <div className="relative max-w-6xl max-h-screen">
             <button
               onClick={() => setModalImage(null)}
-              className="absolute -top-12 right-0 text-white hover:text-emerald-400 text-4xl font-bold"
+              className="absolute -top-10 -right-10 bg-slate-800/80 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold transition-colors shadow-lg"
               data-testid="close-modal-btn"
+              title="Close"
             >
               ×
             </button>
             <img 
               src={modalImage} 
               alt="Full size catch" 
-              className="max-w-full max-h-screen object-contain"
+              className="max-w-full max-h-screen object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
