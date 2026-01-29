@@ -178,7 +178,7 @@ class CarplogAPITester:
             # Verify it's deleted by getting catches again
             success, final_catches = self.test_get_catches()
             if success:
-                final_count = len(final_catches if isinstance(final_catches, list) else final_catches.get('data', []))
+                final_count = len(final_catches) if isinstance(final_catches, list) else 0
                 print(f"   Catches after deletion: {final_count}")
 
         # Test 8: Test error cases
