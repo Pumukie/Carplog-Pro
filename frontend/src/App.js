@@ -660,17 +660,23 @@ function App() {
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Total Weight</p>
-                      <p className="text-3xl font-bold text-cyan-400" data-testid="year-total-weight">{getCurrentYearStats().total_weight.toFixed(2)} kg</p>
+                      <p className="text-3xl font-bold text-cyan-400" data-testid="year-total-weight">
+                        {convertWeight(getCurrentYearStats().total_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                      </p>
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Average Weight</p>
-                      <p className="text-3xl font-bold text-orange-400" data-testid="year-avg-weight">{getCurrentYearStats().average_weight.toFixed(2)} kg</p>
+                      <p className="text-3xl font-bold text-orange-400" data-testid="year-avg-weight">
+                        {convertWeight(getCurrentYearStats().average_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                      </p>
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Biggest Catch</p>
                       {getCurrentYearStats().biggest_catch && (
                         <div data-testid="year-biggest-catch">
-                          <p className="text-3xl font-bold text-amber-400">{getCurrentYearStats().biggest_catch.weight} kg</p>
+                          <p className="text-3xl font-bold text-amber-400">
+                            {convertWeight(getCurrentYearStats().biggest_catch.weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                          </p>
                           <p className="text-slate-500 text-xs">{getCurrentYearStats().biggest_catch.fish_name || 'Unnamed'}</p>
                         </div>
                       )}
