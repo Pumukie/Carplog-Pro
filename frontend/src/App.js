@@ -15,12 +15,16 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
   const [dashboardYear, setDashboardYear] = useState(new Date().getFullYear());
   const [dashboardMonth, setDashboardMonth] = useState(new Date().getMonth() + 1);
+  const [statsView, setStatsView] = useState('monthly'); // 'monthly' or 'yearly'
+  const [modalImage, setModalImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
     fish_name: '',
     weight: '',
+    weight_unit: 'kg',
+    length: '',
     venue: '',
     peg_number: '',
     wraps_count: '',
