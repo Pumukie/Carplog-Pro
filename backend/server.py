@@ -285,9 +285,9 @@ async def create_catch(catch_input: CatchCreate):
     return stats
 
 @api_router.get("/stats/yearly", response_model=List[YearlyStats])
-async def get_yearly_stats(current_user: dict = Depends(get_current_user)):
-    """Get yearly statistics for the current user"""
-    catches = await db.catches.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(10000)
+async def get_yearly_stats():
+    """Get yearly statistics (temp: no auth required)"""
+    catches = await db.catches.find({}, {"_id": 0}).to_list(10000)
     
     for catch in catches:
         if isinstance(catch['caught_at'], str):
