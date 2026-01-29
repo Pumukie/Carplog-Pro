@@ -236,81 +236,10 @@ async def update_profile(profile_update: UserProfile, current_user: dict = Depen
         created_at=datetime.fromisoformat(updated_user["created_at"])
     )
 
-# Catch Routes (User-specific)
+# Catch Routes (Temporarily without authentication)
 @api_router.post("/catches", response_model=Catch, status_code=status.HTTP_201_CREATED)
-async def create_catch(catch_input: CatchCreate, current_user: dict = Depends(get_current_user)):
-    """Log a new catch for the current user"""
-    catch_dict = catch_input.model_dump(exclude_unset=True)
-    
-    if 'caught_at' in catch_dict and catch_dict['caught_at'] is None:
-        del catch_dict['caught_at']
-    
-    catch_obj = Catch(**catch_dict, user_id=current_user["id"])
-    
-    doc = catch_obj.model_dump()
-    doc['caught_at'] = doc['caught_at'].isoformat()
-    
-    await db.catches.insert_one(doc)
-    return catch_obj
-
-@api_router.get("/catches", response_model=List[Catch])
-async def get_catches(
-    year: Optional[int] = None,
-    month: Optional[int] = None,
-    limit: int = 100,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get all catches for the current user with optional filters"""
-    query = {"user_id": current_user["id"]}
-    
-    if year or month:
-        if year and month:
-            start_date = datetime(year, month, 1, tzinfo=timezone.utc)
-            if month == 12:
-                end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
-            else:
-                end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
-            query['caught_at'] = {
-                '$gte': start_date.isoformat(),
-                '$lt': end_date.isoformat()
-            }
-        elif year:
-            start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
-            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
-            query['caught_at'] = {
-                '$gte': start_date.isoformat(),
-                '$lt': end_date.isoformat()
-            }
-    
-    catches = await db.catches.find(query, {"_id": 0}).sort('caught_at', -1).to_list(limit)
-    
-    for catch in catches:
-        if isinstance(catch['caught_at'], str):
-            catch['caught_at'] = datetime.fromisoformat(catch['caught_at'])
-    
-    return catches
-
-@api_router.delete("/catches/{catch_id}")
-async def delete_catch(catch_id: str, current_user: dict = Depends(get_current_user)):
-    """Delete a catch (only if it belongs to current user)"""
-    result = await db.catches.delete_one({"id": catch_id, "user_id": current_user["id"]})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Catch not found or not authorized")
-    return {"message": "Catch deleted successfully"}
-
-@api_router.get("/stats/monthly", response_model=List[MonthlyStats])
-async def get_monthly_stats(year: int, current_user: dict = Depends(get_current_user)):
-    """Get monthly statistics for the current user"""
-    start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
-    end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
-    
-    catches = await db.catches.find({
-        'user_id': current_user["id"],
-        'caught_at': {
-            '$gte': start_date.isoformat(),
-            '$lt': end_date.isoformat()
-        }
-    }, {"_id": 0}).to_list(10000)
+async def create_catch(catch_input: CatchCreate):
+    """Log a new catch (temp: no auth required)\"\"\"\n    catch_dict = catch_input.model_dump(exclude_unset=True)\n    \n    if 'caught_at' in catch_dict and catch_dict['caught_at'] is None:\n        del catch_dict['caught_at']\n    \n    # Use a default user_id for now\n    catch_obj = Catch(**catch_dict, user_id=\"default-user\")\n    \n    doc = catch_obj.model_dump()\n    doc['caught_at'] = doc['caught_at'].isoformat()\n    \n    await db.catches.insert_one(doc)\n    return catch_obj\n\n@api_router.get(\"/catches\", response_model=List[Catch])\nasync def get_catches(\n    year: Optional[int] = None,\n    month: Optional[int] = None,\n    limit: int = 100\n):\n    \"\"\"Get all catches (temp: no auth required)\"\"\"\n    query = {}  # Get all catches for now\n    \n    if year or month:\n        if year and month:\n            start_date = datetime(year, month, 1, tzinfo=timezone.utc)\n            if month == 12:\n                end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)\n            else:\n                end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)\n            query['caught_at'] = {\n                '$gte': start_date.isoformat(),\n                '$lt': end_date.isoformat()\n            }\n        elif year:\n            start_date = datetime(year, 1, 1, tzinfo=timezone.utc)\n            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)\n            query['caught_at'] = {\n                '$gte': start_date.isoformat(),\n                '$lt': end_date.isoformat()\n            }\n    \n    catches = await db.catches.find(query, {\"_id\": 0}).sort('caught_at', -1).to_list(limit)\n    \n    for catch in catches:\n        if isinstance(catch['caught_at'], str):\n            catch['caught_at'] = datetime.fromisoformat(catch['caught_at'])\n    \n    return catches\n\n@api_router.delete(\"/catches/{catch_id}\")\nasync def delete_catch(catch_id: str):\n    \"\"\"Delete a catch (temp: no auth required)\"\"\"\n    result = await db.catches.delete_one({\"id\": catch_id})\n    if result.deleted_count == 0:\n        raise HTTPException(status_code=404, detail=\"Catch not found\")\n    return {\"message\": \"Catch deleted successfully\"}\n\n@api_router.get(\"/stats/monthly\", response_model=List[MonthlyStats])\nasync def get_monthly_stats(year: int):\n    \"\"\"Get monthly statistics (temp: no auth required)\"\"\"\n    start_date = datetime(year, 1, 1, tzinfo=timezone.utc)\n    end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)\n    \n    catches = await db.catches.find({\n        'caught_at': {\n            '$gte': start_date.isoformat(),\n            '$lt': end_date.isoformat()\n        }\n    }, {\"_id\": 0}).to_list(10000)
     
     for catch in catches:
         if isinstance(catch['caught_at'], str):
