@@ -19,6 +19,7 @@ function App() {
   const [displayUnit, setDisplayUnit] = useState('kg'); // 'kg' or 'lb' for statistics display
   const [modalImage, setModalImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
