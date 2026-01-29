@@ -667,6 +667,31 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* Image Modal */}
+      {modalImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setModalImage(null)}
+          data-testid="image-modal"
+        >
+          <div className="relative max-w-6xl max-h-screen">
+            <button
+              onClick={() => setModalImage(null)}
+              className="absolute -top-12 right-0 text-white hover:text-emerald-400 text-4xl font-bold"
+              data-testid="close-modal-btn"
+            >
+              ×
+            </button>
+            <img 
+              src={modalImage} 
+              alt="Full size catch" 
+              className="max-w-full max-h-screen object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
