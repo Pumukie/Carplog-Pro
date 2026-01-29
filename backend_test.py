@@ -114,7 +114,7 @@ class CarplogAPITester:
 
         # Test 2: Get initial catches (should work even if empty)
         success, initial_catches = self.test_get_catches()
-        initial_count = len(initial_catches.get('data', initial_catches)) if success else 0
+        initial_count = len(initial_catches) if success and isinstance(initial_catches, list) else 0
         print(f"   Initial catches count: {initial_count}")
 
         # Test 3: Create test catches
