@@ -74,7 +74,7 @@ async def root():
     return {"message": "Welcome to Carplog-pro API"}
 
 
-@api_router.post("/catches", response_model=Catch)
+@api_router.post("/catches", response_model=Catch, status_code=201)
 async def create_catch(catch_input: CatchCreate):
     """Log a new catch"""
     catch_dict = catch_input.model_dump(exclude_unset=True)
