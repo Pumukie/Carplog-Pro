@@ -72,6 +72,8 @@ function App() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadingImage(true);
+      
       // Compress image before converting to base64
       const img = new Image();
       const canvas = document.createElement('canvas');
@@ -106,11 +108,13 @@ function App() {
         // Convert to base64 with compression (quality 0.7)
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
         setFormData(prev => ({ ...prev, photo_base64: compressedBase64 }));
+        setUploadingImage(false);
       };
       
       img.onerror = () => {
         console.error('Error loading image');
         alert('Error loading image. Please try another file.');
+        setUploadingImage(false);
       };
       
       // Load image from file
@@ -121,6 +125,7 @@ function App() {
       reader.onerror = () => {
         console.error('Error reading file');
         alert('Error reading file. Please try again.');
+        setUploadingImage(false);
       };
       reader.readAsDataURL(file);
     }
