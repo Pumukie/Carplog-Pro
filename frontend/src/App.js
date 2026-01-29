@@ -16,6 +16,7 @@ function App() {
   const [dashboardYear, setDashboardYear] = useState(new Date().getFullYear());
   const [dashboardMonth, setDashboardMonth] = useState(new Date().getMonth() + 1);
   const [statsView, setStatsView] = useState('monthly'); // 'monthly' or 'yearly'
+  const [displayUnit, setDisplayUnit] = useState('kg'); // 'kg' or 'lb' for statistics display
   const [modalImage, setModalImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
