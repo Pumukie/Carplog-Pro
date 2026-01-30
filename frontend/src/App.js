@@ -1,26 +1,87 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import '@/App.css';
 import axios from 'axios';
-import { Plus, Fish, TrendingUp, Calendar, Weight, Award, Trash2 } from 'lucide-react';
+import { Plus, Fish, TrendingUp, Calendar, Weight, Award, Trash2, User, LogOut, LogIn, UserPlus, Save, ChevronDown, ChevronUp } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Auth helper functions
+const getToken = () => localStorage.getItem('carplog_token');
+const setToken = (token) => localStorage.setItem('carplog_token', token);
+const removeToken = () => localStorage.removeItem('carplog_token');
+
+const getAuthHeaders = () => {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 function App() {
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  
+  // Auth form
+  const [authForm, setAuthForm] = useState({
+    email: '',
+    password: '',
+    name: ''
+  });
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [catches, setCatches] = useState([]);
   const [yearlyStats, setYearlyStats] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
   const [dashboardYear, setDashboardYear] = useState(new Date().getFullYear());
   const [dashboardMonth, setDashboardMonth] = useState(new Date().getMonth() + 1);
-  const [statsView, setStatsView] = useState('monthly'); // 'monthly' or 'yearly'
-  const [displayUnit, setDisplayUnit] = useState('kg'); // 'kg' or 'lb' for statistics display
+  const [statsView, setStatsView] = useState('monthly');
+  const [displayUnit, setDisplayUnit] = useState('kg');
   const [modalImage, setModalImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Profile expanded sections
+  const [expandedSections, setExpandedSections] = useState({
+    personal: true,
+    gear: false,
+    line: false,
+    preferences: false,
+    locations: false
+  });
 
-  // Form state
+  // Profile form
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    surname: '',
+    age: '',
+    years_angling: '',
+    bio: '',
+    rods: '',
+    reels: '',
+    alarms: '',
+    bobbins: '',
+    rod_pod_banksticks: '',
+    bivvy_brolly: '',
+    baitboat: '',
+    net_and_mat: '',
+    mainline: '',
+    mainline_breaking_strain: '',
+    hooklink: '',
+    hooklink_breaking_strain: '',
+    favorite_brands: '',
+    favorite_bait_company: '',
+    favorite_rigs: '',
+    favorite_baits: '',
+    home_waters: '',
+    favorite_venues: '',
+    pb_weight: '',
+    pb_weight_unit: 'kg'
+  });
+
+  // Catch form state
   const [formData, setFormData] = useState({
     fish_name: '',
     weight: '',
@@ -32,27 +93,165 @@ function App() {
     bait_used: '',
     notes: '',
     photo_base64: '',
-    catch_date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    catch_date: new Date().toISOString().split('T')[0]
   });
 
+  // Check authentication on mount
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedYear, dashboardYear, dashboardMonth]);
+    const token = getToken();
+    if (token) {
+      fetchCurrentUser();
+    }
+  }, []);
 
-  const loadData = async () => {
+  const fetchCurrentUser = async () => {
     try {
+      const response = await axios.get(`${API}/auth/me`, {
+        headers: getAuthHeaders()
+      });
+      setUser(response.data);
+      setIsAuthenticated(true);
+      // Populate profile form
+      if (response.data.profile) {
+        setProfileForm(prev => ({
+          ...prev,
+          ...response.data.profile,
+          age: response.data.profile.age || '',
+          years_angling: response.data.profile.years_angling || '',
+          pb_weight: response.data.profile.pb_weight || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      removeToken();
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
+  const loadData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const headers = getAuthHeaders();
       const [catchesRes, yearlyRes, monthlyRes] = await Promise.all([
-        axios.get(`${API}/catches?limit=50`),
-        axios.get(`${API}/stats/yearly`),
-        axios.get(`${API}/stats/monthly?year=${selectedYear}`)
+        axios.get(`${API}/catches?limit=50`, { headers }),
+        axios.get(`${API}/stats/yearly`, { headers }),
+        axios.get(`${API}/stats/monthly?year=${selectedYear}`, { headers })
       ]);
       setCatches(catchesRes.data);
       setYearlyStats(yearlyRes.data);
       setMonthlyStats(monthlyRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
+      if (error.response?.status === 401) {
+        handleLogout();
+      }
     }
+  }, [isAuthenticated, selectedYear]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated, selectedYear, dashboardYear, dashboardMonth, loadData]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    
+    try {
+      const formDataObj = new URLSearchParams();
+      formDataObj.append('username', authForm.email);
+      formDataObj.append('password', authForm.password);
+      
+      const response = await axios.post(`${API}/auth/login`, formDataObj, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      
+      setToken(response.data.access_token);
+      await fetchCurrentUser();
+      setAuthForm({ email: '', password: '', name: '' });
+    } catch (error) {
+      setAuthError(error.response?.data?.detail || 'Login failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    
+    try {
+      await axios.post(`${API}/auth/register`, {
+        email: authForm.email,
+        password: authForm.password,
+        name: authForm.name
+      });
+      
+      // Auto-login after registration
+      const formDataObj = new URLSearchParams();
+      formDataObj.append('username', authForm.email);
+      formDataObj.append('password', authForm.password);
+      
+      const loginResponse = await axios.post(`${API}/auth/login`, formDataObj, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      
+      setToken(loginResponse.data.access_token);
+      await fetchCurrentUser();
+      setAuthForm({ email: '', password: '', name: '' });
+    } catch (error) {
+      setAuthError(error.response?.data?.detail || 'Registration failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    removeToken();
+    setIsAuthenticated(false);
+    setUser(null);
+    setCatches([]);
+    setYearlyStats([]);
+    setMonthlyStats([]);
+    setActiveTab('dashboard');
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const profileData = {
+        ...profileForm,
+        age: profileForm.age ? parseInt(profileForm.age) : null,
+        years_angling: profileForm.years_angling ? parseInt(profileForm.years_angling) : null,
+        pb_weight: profileForm.pb_weight ? parseFloat(profileForm.pb_weight) : null
+      };
+      
+      const response = await axios.put(`${API}/auth/profile`, profileData, {
+        headers: getAuthHeaders()
+      });
+      
+      setUser(response.data);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      alert('Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const getFilteredCatches = () => {
@@ -83,7 +282,6 @@ function App() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Set catch time to noon (12:00) of the selected date
       const catchDateTime = new Date(`${formData.catch_date}T12:00:00`).toISOString();
       
       const submitData = {
@@ -94,10 +292,12 @@ function App() {
         caught_at: catchDateTime
       };
       
-      // Remove the catch_date field before sending
       delete submitData.catch_date;
       
-      await axios.post(`${API}/catches`, submitData);
+      await axios.post(`${API}/catches`, submitData, {
+        headers: getAuthHeaders()
+      });
+      
       setFormData({
         fish_name: '',
         weight: '',
@@ -124,19 +324,14 @@ function App() {
   const handleDelete = async (catchId) => {
     if (window.confirm('Delete this catch?')) {
       try {
-        await axios.delete(`${API}/catches/${catchId}`);
+        await axios.delete(`${API}/catches/${catchId}`, {
+          headers: getAuthHeaders()
+        });
         await loadData();
       } catch (error) {
         console.error('Error deleting catch:', error);
       }
     }
-  };
-
-  const getCurrentMonthStats = () => {
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-    return monthlyStats.find(s => s.month === currentMonth && s.year === currentYear) || 
-           { total_count: 0, total_weight: 0, average_weight: 0 };
   };
 
   const getCurrentYearStats = () => {
@@ -147,12 +342,10 @@ function App() {
     return new Date(2000, monthNum - 1, 1).toLocaleDateString('en-US', { month: 'long' });
   };
 
-  // Generate available years: 5 years before 2026, current year, and up to 5 years after 2026 (or current year + 5 if later)
   const getAvailableYears = () => {
     const baseYear = 2026;
     const currentYear = new Date().getFullYear();
-    const startYear = baseYear - 5; // 2021
-    // End year is the greater of: baseYear + 5 (2031) or currentYear + 5
+    const startYear = baseYear - 5;
     const endYear = Math.max(baseYear + 5, currentYear + 5);
     
     const years = [];
@@ -173,23 +366,110 @@ function App() {
     if (!weight) return 0;
     if (fromUnit === toUnit) return weight;
     
-    // Convert to kg first if needed
     let weightInKg = weight;
     if (fromUnit === 'lb') {
       weightInKg = weight / 2.20462;
     }
     
-    // Convert to target unit
     if (toUnit === 'lb') {
       return weightInKg * 2.20462;
     }
     return weightInKg;
   };
 
-  const displayWeight = (weight, originalUnit = 'kg') => {
-    const converted = convertWeight(weight, originalUnit, displayUnit);
-    return `${converted.toFixed(2)} ${displayUnit}`;
-  };
+  // Auth Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Fish className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+            <h1 className="text-4xl font-bold text-emerald-400 mb-2">Carplog-Pro</h1>
+            <p className="text-slate-400">Your personal carp fishing diary</p>
+          </div>
+          
+          <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+            <div className="flex mb-6">
+              <button
+                onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                className={`flex-1 py-2 text-center rounded-l-lg transition-colors ${authMode === 'login' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                data-testid="login-mode-btn"
+              >
+                <LogIn className="w-4 h-4 inline mr-2" />
+                Login
+              </button>
+              <button
+                onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                className={`flex-1 py-2 text-center rounded-r-lg transition-colors ${authMode === 'register' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                data-testid="register-mode-btn"
+              >
+                <UserPlus className="w-4 h-4 inline mr-2" />
+                Register
+              </button>
+            </div>
+            
+            {authError && (
+              <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-2 rounded-lg mb-4" data-testid="auth-error">
+                {authError}
+              </div>
+            )}
+            
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister}>
+              {authMode === 'register' && (
+                <div className="mb-4">
+                  <label className="block text-slate-300 mb-2">Name (Optional)</label>
+                  <input
+                    type="text"
+                    value={authForm.name}
+                    onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-100"
+                    placeholder="Your name"
+                    data-testid="register-name-input"
+                  />
+                </div>
+              )}
+              
+              <div className="mb-4">
+                <label className="block text-slate-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={authForm.email}
+                  onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-100"
+                  placeholder="your@email.com"
+                  required
+                  data-testid="auth-email-input"
+                />
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-slate-300 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={authForm.password}
+                  onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-100"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  data-testid="auth-password-input"
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
+                data-testid="auth-submit-btn"
+              >
+                {authLoading ? 'Please wait...' : (authMode === 'login' ? 'Login' : 'Create Account')}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">
@@ -201,7 +481,7 @@ function App() {
               <Fish className="w-8 h-8 text-emerald-500" />
               <h1 className="text-2xl font-bold text-emerald-400">Carplog-Pro</h1>
             </div>
-            <nav className="flex space-x-1">
+            <nav className="flex items-center space-x-1">
               <button
                 onClick={() => setActiveTab('dashboard')}
                 className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-emerald-700 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
@@ -231,6 +511,22 @@ function App() {
               >
                 Statistics
               </button>
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${activeTab === 'profile' ? 'bg-emerald-700 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                data-testid="profile-tab"
+              >
+                <User className="w-4 h-4" />
+                <span>Profile</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="ml-2 px-4 py-2 rounded-lg bg-red-900/50 text-red-300 hover:bg-red-800 transition-colors flex items-center space-x-2"
+                data-testid="logout-btn"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
             </nav>
           </div>
         </div>
@@ -238,6 +534,397 @@ function App() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Profile Page */}
+        {activeTab === 'profile' && (
+          <div className="max-w-3xl mx-auto" data-testid="profile-view">
+            <h2 className="text-3xl font-bold text-slate-100 mb-6">My Profile & Setup</h2>
+            <p className="text-slate-400 mb-6">All fields are optional. Fill in what you'd like to share about yourself and your gear.</p>
+            
+            <form onSubmit={handleProfileUpdate} className="space-y-4">
+              {/* Personal Info Section */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('personal')}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-800/30 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold text-emerald-400">Personal Information</h3>
+                  {expandedSections.personal ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                </button>
+                {expandedSections.personal && (
+                  <div className="px-6 pb-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">First Name</label>
+                        <input
+                          type="text"
+                          value={profileForm.name || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          data-testid="profile-name-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Surname</label>
+                        <input
+                          type="text"
+                          value={profileForm.surname || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, surname: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          data-testid="profile-surname-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Age</label>
+                        <input
+                          type="number"
+                          value={profileForm.age || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, age: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          data-testid="profile-age-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Years Angling</label>
+                        <input
+                          type="number"
+                          value={profileForm.years_angling || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, years_angling: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          data-testid="profile-years-input"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 mb-2">Bio / About Me</label>
+                      <textarea
+                        value={profileForm.bio || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100 h-24"
+                        placeholder="Tell us about yourself and your fishing journey..."
+                        data-testid="profile-bio-input"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Personal Best (PB)</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={profileForm.pb_weight || ''}
+                            onChange={(e) => setProfileForm({ ...profileForm, pb_weight: e.target.value })}
+                            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                            placeholder="Weight"
+                            data-testid="profile-pb-input"
+                          />
+                          <select
+                            value={profileForm.pb_weight_unit || 'kg'}
+                            onChange={(e) => setProfileForm({ ...profileForm, pb_weight_unit: e.target.value })}
+                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                          >
+                            <option value="kg">kg</option>
+                            <option value="lb">lb</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Gear Setup Section */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('gear')}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-800/30 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold text-emerald-400">Gear Setup</h3>
+                  {expandedSections.gear ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                </button>
+                {expandedSections.gear && (
+                  <div className="px-6 pb-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Rods</label>
+                        <input
+                          type="text"
+                          value={profileForm.rods || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, rods: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Nash Scope 10ft 3lb TC"
+                          data-testid="profile-rods-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Reels</label>
+                        <input
+                          type="text"
+                          value={profileForm.reels || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, reels: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Shimano Ultegra 14000 XTD"
+                          data-testid="profile-reels-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Alarms</label>
+                        <input
+                          type="text"
+                          value={profileForm.alarms || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, alarms: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Fox RX+ 4 Rod Set"
+                          data-testid="profile-alarms-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Bobbins/Hangers</label>
+                        <input
+                          type="text"
+                          value={profileForm.bobbins || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, bobbins: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Nash Siren S5"
+                          data-testid="profile-bobbins-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Rod Pod / Banksticks</label>
+                        <input
+                          type="text"
+                          value={profileForm.rod_pod_banksticks || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, rod_pod_banksticks: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Solar P1 Pod"
+                          data-testid="profile-rodpod-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Bivvy / Brolly</label>
+                        <input
+                          type="text"
+                          value={profileForm.bivvy_brolly || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, bivvy_brolly: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Nash Titan T2000"
+                          data-testid="profile-bivvy-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Baitboat</label>
+                        <input
+                          type="text"
+                          value={profileForm.baitboat || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, baitboat: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Waverunner Atom"
+                          data-testid="profile-baitboat-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Net & Unhooking Mat</label>
+                        <input
+                          type="text"
+                          value={profileForm.net_and_mat || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, net_and_mat: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Nash Scope Landing Net"
+                          data-testid="profile-net-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Line Setup Section */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('line')}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-800/30 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold text-emerald-400">Line Setup</h3>
+                  {expandedSections.line ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                </button>
+                {expandedSections.line && (
+                  <div className="px-6 pb-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Mainline</label>
+                        <input
+                          type="text"
+                          value={profileForm.mainline || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, mainline: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Gardner GT-HD Mono"
+                          data-testid="profile-mainline-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Breaking Strain</label>
+                        <input
+                          type="text"
+                          value={profileForm.mainline_breaking_strain || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, mainline_breaking_strain: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., 15lb"
+                          data-testid="profile-mainline-bs-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Hooklink Material</label>
+                        <input
+                          type="text"
+                          value={profileForm.hooklink || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, hooklink: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Korda Dark Matter Braid"
+                          data-testid="profile-hooklink-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Breaking Strain</label>
+                        <input
+                          type="text"
+                          value={profileForm.hooklink_breaking_strain || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, hooklink_breaking_strain: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., 25lb"
+                          data-testid="profile-hooklink-bs-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Preferences Section */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('preferences')}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-800/30 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold text-emerald-400">Preferences & Favorites</h3>
+                  {expandedSections.preferences ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                </button>
+                {expandedSections.preferences && (
+                  <div className="px-6 pb-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Favorite Tackle Brands</label>
+                        <input
+                          type="text"
+                          value={profileForm.favorite_brands || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, favorite_brands: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Nash, Korda, Fox"
+                          data-testid="profile-brands-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Favorite Bait Company</label>
+                        <input
+                          type="text"
+                          value={profileForm.favorite_bait_company || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, favorite_bait_company: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Mainline, CC Moore"
+                          data-testid="profile-baitcompany-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 mb-2">Favorite Rigs</label>
+                        <input
+                          type="text"
+                          value={profileForm.favorite_rigs || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, favorite_rigs: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Ronnie Rig, German Rig"
+                          data-testid="profile-rigs-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-2">Favorite Baits</label>
+                        <input
+                          type="text"
+                          value={profileForm.favorite_baits || ''}
+                          onChange={(e) => setProfileForm({ ...profileForm, favorite_baits: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                          placeholder="e.g., Cell, Krill"
+                          data-testid="profile-baits-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Fishing Locations Section */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('locations')}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-800/30 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold text-emerald-400">Fishing Locations</h3>
+                  {expandedSections.locations ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                </button>
+                {expandedSections.locations && (
+                  <div className="px-6 pb-6 space-y-4">
+                    <div>
+                      <label className="block text-slate-300 mb-2">Home Waters</label>
+                      <input
+                        type="text"
+                        value={profileForm.home_waters || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, home_waters: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                        placeholder="e.g., Local club lake, syndicate water"
+                        data-testid="profile-homewaters-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 mb-2">Favorite Venues</label>
+                      <textarea
+                        value={profileForm.favorite_venues || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, favorite_venues: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100 h-20"
+                        placeholder="e.g., Linear Fisheries, Yateley, etc."
+                        data-testid="profile-venues-input"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                data-testid="save-profile-btn"
+              >
+                <Save className="w-5 h-5" />
+                <span>{loading ? 'Saving...' : 'Save Profile'}</span>
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* Dashboard */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6" data-testid="dashboard-view">
@@ -245,7 +932,6 @@ function App() {
               <h2 className="text-3xl font-bold text-slate-100">Dashboard</h2>
               
               <div className="flex items-center space-x-3">
-                {/* Unit Toggle */}
                 <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
                   <button
                     onClick={() => setDisplayUnit('kg')}
@@ -562,45 +1248,58 @@ function App() {
         {activeTab === 'catches' && (
           <div data-testid="catches-view">
             <h2 className="text-3xl font-bold text-slate-100 mb-6">All Catches ({catches.length})</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {catches.map((catch_item) => (
-                <div key={catch_item.id} className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden" data-testid="catch-card">
-                  {catch_item.photo_base64 && (
-                    <img 
-                      src={catch_item.photo_base64} 
-                      alt="Catch" 
-                      className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
-                      onClick={() => setModalImage(catch_item.photo_base64)}
-                    />
-                  )}
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-lg font-semibold text-emerald-400">{catch_item.fish_name || 'Unnamed'}</h4>
-                      <span className="text-2xl font-bold text-orange-400">{formatWeight(catch_item.weight, catch_item.weight_unit)}</span>
+            {catches.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl">
+                <Fish className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+                <p className="text-slate-500 mb-4">No catches logged yet</p>
+                <button
+                  onClick={() => setActiveTab('add')}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Log Your First Catch
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {catches.map((catch_item) => (
+                  <div key={catch_item.id} className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl overflow-hidden" data-testid="catch-card">
+                    {catch_item.photo_base64 && (
+                      <img 
+                        src={catch_item.photo_base64} 
+                        alt="Catch" 
+                        className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                        onClick={() => setModalImage(catch_item.photo_base64)}
+                      />
+                    )}
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-lg font-semibold text-emerald-400">{catch_item.fish_name || 'Unnamed'}</h4>
+                        <span className="text-2xl font-bold text-orange-400">{formatWeight(catch_item.weight, catch_item.weight_unit)}</span>
+                      </div>
+                      <div className="space-y-1 text-sm text-slate-400">
+                        {catch_item.length && (
+                          <p className="text-amber-400 font-medium">📏 {catch_item.length} {catch_item.weight_unit === 'kg' ? 'cm' : 'in'}</p>
+                        )}
+                        {catch_item.venue && <p className="text-cyan-400 font-medium">📍 {catch_item.venue}</p>}
+                        {catch_item.peg_number && <p>Peg: {catch_item.peg_number}</p>}
+                        {catch_item.wraps_count && <p>Wraps: {catch_item.wraps_count}</p>}
+                        {catch_item.bait_used && <p>Bait: {catch_item.bait_used}</p>}
+                        {catch_item.notes && <p className="text-slate-500 text-xs italic">{catch_item.notes}</p>}
+                        <p className="text-slate-500 text-xs mt-2">{new Date(catch_item.caught_at).toLocaleString()}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(catch_item.id)}
+                        className="mt-3 w-full bg-red-900/50 hover:bg-red-800 text-red-300 px-3 py-2 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors"
+                        data-testid="delete-catch-btn"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Delete</span>
+                      </button>
                     </div>
-                    <div className="space-y-1 text-sm text-slate-400">
-                      {catch_item.length && (
-                        <p className="text-amber-400 font-medium">📏 {catch_item.length} {catch_item.weight_unit === 'kg' ? 'cm' : 'in'}</p>
-                      )}
-                      {catch_item.venue && <p className="text-cyan-400 font-medium">📍 {catch_item.venue}</p>}
-                      {catch_item.peg_number && <p>Peg: {catch_item.peg_number}</p>}
-                      {catch_item.wraps_count && <p>Wraps: {catch_item.wraps_count}</p>}
-                      {catch_item.bait_used && <p>Bait: {catch_item.bait_used}</p>}
-                      {catch_item.notes && <p className="text-slate-500 text-xs italic">{catch_item.notes}</p>}
-                      <p className="text-slate-500 text-xs mt-2">{new Date(catch_item.caught_at).toLocaleString()}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(catch_item.id)}
-                      className="mt-3 w-full bg-red-900/50 hover:bg-red-800 text-red-300 px-3 py-2 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors"
-                      data-testid="delete-catch-btn"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Delete</span>
-                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -610,7 +1309,6 @@ function App() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-slate-100">Statistics</h2>
               <div className="flex items-center space-x-3">
-                {/* Unit Toggle */}
                 <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
                   <button
                     onClick={() => setDisplayUnit('kg')}
@@ -626,7 +1324,6 @@ function App() {
                   </button>
                 </div>
 
-                {/* View Toggle */}
                 <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 flex">
                   <button
                     onClick={() => setStatsView('monthly')}
@@ -644,7 +1341,6 @@ function App() {
                   </button>
                 </div>
                 
-                {/* Year Selector (shown for monthly view) */}
                 {statsView === 'monthly' && (
                   <select
                     value={selectedYear}
@@ -660,10 +1356,8 @@ function App() {
               </div>
             </div>
 
-            {/* Monthly View */}
             {statsView === 'monthly' && (
               <>
-                {/* Year Summary */}
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6 mb-6">
                   <h3 className="text-xl font-bold text-slate-100 mb-4">{selectedYear} Summary</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -697,7 +1391,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* Monthly Breakdown */}
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-slate-100 mb-4">Monthly Breakdown</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -740,44 +1433,49 @@ function App() {
               </>
             )}
 
-            {/* Yearly View */}
             {statsView === 'yearly' && (
               <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
                 <h3 className="text-xl font-bold text-slate-100 mb-4">All Years Summary</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {yearlyStats.map((stat) => (
-                    <div key={stat.year} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-testid="year-stat-card">
-                      <h4 className="text-2xl font-bold text-emerald-400 mb-3">{stat.year}</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Catches:</span>
-                          <span className="text-slate-100 font-semibold">{stat.total_count}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Weight:</span>
-                          <span className="text-slate-100 font-semibold">
-                            {convertWeight(stat.total_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Average:</span>
-                          <span className="text-slate-100 font-semibold">
-                            {convertWeight(stat.average_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
-                          </span>
-                        </div>
-                        {stat.biggest_catch && (
-                          <div className="mt-3 pt-3 border-t border-slate-700">
-                            <p className="text-amber-400 text-xs mb-1">Biggest Catch:</p>
-                            <p className="text-amber-300 font-bold">
-                              {convertWeight(stat.biggest_catch.weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
-                            </p>
-                            <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
+                {yearlyStats.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500">No statistics available yet. Start logging catches!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {yearlyStats.map((stat) => (
+                      <div key={stat.year} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-testid="year-stat-card">
+                        <h4 className="text-2xl font-bold text-emerald-400 mb-3">{stat.year}</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Total Catches:</span>
+                            <span className="text-slate-100 font-semibold">{stat.total_count}</span>
                           </div>
-                        )}
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Total Weight:</span>
+                            <span className="text-slate-100 font-semibold">
+                              {convertWeight(stat.total_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Average:</span>
+                            <span className="text-slate-100 font-semibold">
+                              {convertWeight(stat.average_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                            </span>
+                          </div>
+                          {stat.biggest_catch && (
+                            <div className="mt-3 pt-3 border-t border-slate-700">
+                              <p className="text-amber-400 text-xs mb-1">Biggest Catch:</p>
+                              <p className="text-amber-300 font-bold">
+                                {convertWeight(stat.biggest_catch.weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                              </p>
+                              <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -791,7 +1489,6 @@ function App() {
           onClick={() => setModalImage(null)}
           data-testid="image-modal"
         >
-          {/* Close Button - Top Right of Screen */}
           <button
             onClick={() => setModalImage(null)}
             className="fixed top-4 right-4 bg-slate-800/90 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-3xl font-bold transition-colors shadow-lg z-10"
