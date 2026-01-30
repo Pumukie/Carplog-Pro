@@ -280,10 +280,11 @@ async def create_catch(catch_input: CatchCreate, current_user: dict = Depends(ge
 async def get_catches(
     year: Optional[int] = None,
     month: Optional[int] = None,
-    limit: int = 100
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
 ):
-    """Get all catches (temp: no auth required)"""
-    query = {}  # Get all catches for now
+    """Get user's catches"""
+    query = {"user_id": current_user["id"]}
     
     if year or month:
         if year and month:
@@ -313,9 +314,9 @@ async def get_catches(
     return catches
 
 @api_router.delete("/catches/{catch_id}")
-async def delete_catch(catch_id: str):
-    """Delete a catch (temp: no auth required)"""
-    result = await db.catches.delete_one({"id": catch_id})
+async def delete_catch(catch_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a catch"""
+    result = await db.catches.delete_one({"id": catch_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Catch not found")
     return {"message": "Catch deleted successfully"}
