@@ -322,12 +322,13 @@ async def delete_catch(catch_id: str, current_user: dict = Depends(get_current_u
     return {"message": "Catch deleted successfully"}
 
 @api_router.get("/stats/monthly", response_model=List[MonthlyStats])
-async def get_monthly_stats(year: int):
-    """Get monthly statistics (temp: no auth required)"""
+async def get_monthly_stats(year: int, current_user: dict = Depends(get_current_user)):
+    """Get monthly statistics for user"""
     start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
     end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     
     catches = await db.catches.find({
+        'user_id': current_user["id"],
         'caught_at': {
             '$gte': start_date.isoformat(),
             '$lt': end_date.isoformat()
