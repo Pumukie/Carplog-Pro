@@ -188,7 +188,7 @@ class YearlyStats(BaseModel):
 # Authentication Routes
 @api_router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate):
-    """Register a new user with comprehensive profile"""
+    """Register a new user"""
     # Check if user already exists
     existing_user = await db.users.find_one({"email": user_data.email})
     if existing_user:
@@ -197,11 +197,12 @@ async def register(user_data: UserCreate):
             detail="Email already registered"
         )
     
-    # Create user
+    # Create user with empty profile
+    initial_profile = UserProfile(name=user_data.name)
     user = User(
         email=user_data.email,
         hashed_password=get_password_hash(user_data.password),
-        profile=user_data.profile
+        profile=initial_profile
     )
     
     user_dict = user.model_dump()
