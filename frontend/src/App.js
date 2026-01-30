@@ -280,10 +280,9 @@ function App() {
                   className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
                   data-testid="dashboard-year-selector"
                 >
-                  {yearlyStats.map((stat) => (
-                    <option key={stat.year} value={stat.year}>{stat.year}</option>
+                  {getAvailableYears().map((year) => (
+                    <option key={year} value={year}>{year}</option>
                   ))}
-                  {yearlyStats.length === 0 && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
                 </select>
               </div>
             </div>
