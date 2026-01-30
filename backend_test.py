@@ -67,7 +67,61 @@ class CarplogAPITester:
 
     def test_api_root(self):
         """Test API root endpoint"""
-        return self.run_test("API Root", "GET", "", 200)
+        return self.run_test("API Root", "GET", "", 200, auth_required=False)
+
+    def test_register_user(self):
+        """Test user registration"""
+        user_data = {
+            "email": self.test_user_email,
+            "password": self.test_user_password,
+            "name": "Test User"
+        }
+        return self.run_test("User Registration", "POST", "auth/register", 201, user_data, auth_required=False)
+
+    def test_login_user(self):
+        """Test user login and get token"""
+        # FastAPI OAuth2PasswordRequestForm expects form data
+        import urllib.parse
+        login_data = urllib.parse.urlencode({
+            'username': self.test_user_email,
+            'password': self.test_user_password
+        })
+        
+        url = f"{self.api_url}/auth/login"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        
+        try:
+            response = requests.post(url, data=login_data, headers=headers, timeout=10)
+            success = response.status_code == 200
+            
+            if success:
+                response_data = response.json()
+                if 'access_token' in response_data:
+                    self.token = response_data['access_token']
+                    print(f"   Obtained JWT token: {self.token[:20]}...")
+                return self.log_test("User Login", success, f"Status: {response.status_code}"), response_data
+            else:
+                return self.log_test("User Login", False, f"Status: {response.status_code} Response: {response.text[:200]}"), {}
+                
+        except Exception as e:
+            return self.log_test("User Login", False, f"Error: {str(e)}"), {}
+
+    def test_get_current_user(self):
+        """Test getting current user profile"""
+        return self.run_test("Get Current User", "GET", "auth/me", 200)
+
+    def test_update_profile(self):
+        """Test updating user profile"""
+        profile_data = {
+            "name": "Updated Test User",
+            "age": 30,
+            "years_angling": 10,
+            "bio": "Test angler profile",
+            "rods": "Nash Scope 10ft",
+            "reels": "Shimano Ultegra",
+            "favorite_bait_company": "Mainline"
+        }
+        return self.run_test("Update Profile", "PUT", "auth/profile", 200, profile_data)
 
     def test_create_catch(self, catch_data: Dict[str, Any]):
         """Test creating a new catch"""
