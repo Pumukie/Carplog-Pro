@@ -170,15 +170,33 @@ class CarplogAPITester:
         print("🎣 Starting Carplog-Pro API Tests")
         print("=" * 50)
 
-        # Test 1: API Root
+        # Test 1: API Root (no auth required)
         self.test_api_root()
 
-        # Test 2: Get initial catches (should work even if empty)
+        # Test 2: User Registration
+        success, _ = self.test_register_user()
+        if not success:
+            print("❌ Registration failed - stopping tests")
+            return False
+
+        # Test 3: User Login
+        success, _ = self.test_login_user()
+        if not success or not self.token:
+            print("❌ Login failed - stopping tests")
+            return False
+
+        # Test 4: Get current user profile
+        self.test_get_current_user()
+
+        # Test 5: Update profile
+        self.test_update_profile()
+
+        # Test 6: Get initial catches (should work even if empty)
         success, initial_catches = self.test_get_catches()
         initial_count = len(initial_catches) if success and isinstance(initial_catches, list) else 0
         print(f"   Initial catches count: {initial_count}")
 
-        # Test 3: Create test catches
+        # Test 7: Create test catches
         current_year = datetime.now().year
         current_month = datetime.now().month
         
@@ -216,21 +234,21 @@ class CarplogAPITester:
             if success:
                 created_catches.append(response)
 
-        # Test 4: Get catches after creation
+        # Test 8: Get catches after creation
         success, updated_catches = self.test_get_catches()
         if success:
             new_count = len(updated_catches) if isinstance(updated_catches, list) else 0
             print(f"   Catches after creation: {new_count}")
 
-        # Test 5: Test filtering by current year and month
+        # Test 9: Test filtering by current year and month
         self.test_get_catches_with_filters(current_year)
         self.test_get_catches_with_filters(current_year, current_month)
 
-        # Test 6: Test statistics endpoints
+        # Test 10: Test statistics endpoints
         self.test_monthly_stats(current_year)
         self.test_yearly_stats()
 
-        # Test 7: Test delete functionality
+        # Test 11: Test delete functionality
         if self.test_catches:
             # Delete the first test catch
             first_catch_id = self.test_catches[0]
@@ -242,7 +260,7 @@ class CarplogAPITester:
                 final_count = len(final_catches) if isinstance(final_catches, list) else 0
                 print(f"   Catches after deletion: {final_count}")
 
-        # Test 8: Test error cases
+        # Test 12: Test error cases
         print("\n🔍 Testing Error Cases:")
         
         # Test deleting non-existent catch
@@ -251,6 +269,12 @@ class CarplogAPITester:
         # Test invalid catch creation (missing required fields)
         invalid_catch = {"fish_name": "Invalid"}  # Missing weight and peg_number
         self.run_test("Create Invalid Catch", "POST", "catches", 422, invalid_catch)
+
+        # Test unauthorized access (without token)
+        old_token = self.token
+        self.token = None
+        self.run_test("Unauthorized Access", "GET", "catches", 401)
+        self.token = old_token
 
         # Cleanup remaining test catches
         print(f"\n🧹 Cleaning up {len(self.test_catches)} remaining test catches...")
