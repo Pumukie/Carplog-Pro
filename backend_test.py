@@ -27,10 +27,14 @@ class CarplogAPITester:
         return success
 
     def run_test(self, name: str, method: str, endpoint: str, expected_status: int, 
-                 data: Dict[Any, Any] = None, params: Dict[str, Any] = None) -> tuple:
+                 data: Dict[Any, Any] = None, params: Dict[str, Any] = None, auth_required: bool = True) -> tuple:
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}"
         headers = {'Content-Type': 'application/json'}
+        
+        # Add authorization header if token is available and auth is required
+        if auth_required and self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
         
         try:
             if method == 'GET':
