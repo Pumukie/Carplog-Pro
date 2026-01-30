@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 class CarplogAPITester:
-    def __init__(self, base_url="https://fishing-journal-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://angler-diary-5.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
