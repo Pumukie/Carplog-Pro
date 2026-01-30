@@ -75,23 +75,45 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # User Models
 class UserProfile(BaseModel):
-    name: str
+    # Personal Info
+    name: Optional[str] = None
+    surname: Optional[str] = None
     age: Optional[int] = None
     years_angling: Optional[int] = None
-    favorite_brands: Optional[str] = None
+    bio: Optional[str] = None
+    
+    # Gear Setup
     rods: Optional[str] = None
     reels: Optional[str] = None
     alarms: Optional[str] = None
     bobbins: Optional[str] = None
     rod_pod_banksticks: Optional[str] = None
     bivvy_brolly: Optional[str] = None
-    locations_fished: Optional[str] = None
+    baitboat: Optional[str] = None
+    net_and_mat: Optional[str] = None
+    
+    # Line Setup
+    mainline: Optional[str] = None
+    mainline_breaking_strain: Optional[str] = None
+    hooklink: Optional[str] = None
+    hooklink_breaking_strain: Optional[str] = None
+    
+    # Preferences
+    favorite_brands: Optional[str] = None
+    favorite_bait_company: Optional[str] = None
+    favorite_rigs: Optional[str] = None
+    favorite_baits: Optional[str] = None
+    
+    # Fishing Locations
+    home_waters: Optional[str] = None
     favorite_venues: Optional[str] = None
+    pb_weight: Optional[float] = None
+    pb_weight_unit: Optional[str] = "kg"
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    profile: UserProfile
+    name: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
