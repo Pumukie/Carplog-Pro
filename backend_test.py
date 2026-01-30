@@ -12,6 +12,9 @@ class CarplogAPITester:
         self.tests_run = 0
         self.tests_passed = 0
         self.test_catches = []  # Store created catches for cleanup
+        self.token = None  # JWT token for authentication
+        self.test_user_email = f"test_user_{datetime.now().strftime('%H%M%S')}@test.com"
+        self.test_user_password = "TestPass123!"
 
     def log_test(self, name: str, success: bool, details: str = ""):
         """Log test result"""
