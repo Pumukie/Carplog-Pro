@@ -259,17 +259,16 @@ async def update_profile(profile_update: UserProfile, current_user: dict = Depen
         created_at=datetime.fromisoformat(updated_user["created_at"])
     )
 
-# Catch Routes (Temporarily without authentication)
+# Catch Routes (with optional authentication)
 @api_router.post("/catches", response_model=Catch, status_code=status.HTTP_201_CREATED)
-async def create_catch(catch_input: CatchCreate):
-    """Log a new catch (temp: no auth required)"""
+async def create_catch(catch_input: CatchCreate, current_user: dict = Depends(get_current_user)):
+    """Log a new catch"""
     catch_dict = catch_input.model_dump(exclude_unset=True)
     
     if 'caught_at' in catch_dict and catch_dict['caught_at'] is None:
         del catch_dict['caught_at']
     
-    # Use a default user_id for now
-    catch_obj = Catch(**catch_dict, user_id="default-user")
+    catch_obj = Catch(**catch_dict, user_id=current_user["id"])
     
     doc = catch_obj.model_dump()
     doc['caught_at'] = doc['caught_at'].isoformat()
