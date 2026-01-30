@@ -147,6 +147,21 @@ function App() {
     return new Date(2000, monthNum - 1, 1).toLocaleDateString('en-US', { month: 'long' });
   };
 
+  // Generate available years: 5 years before 2026, current year, and up to 5 years after 2026 (or current year + 5 if later)
+  const getAvailableYears = () => {
+    const baseYear = 2026;
+    const currentYear = new Date().getFullYear();
+    const startYear = baseYear - 5; // 2021
+    // End year is the greater of: baseYear + 5 (2031) or currentYear + 5
+    const endYear = Math.max(baseYear + 5, currentYear + 5);
+    
+    const years = [];
+    for (let year = startYear; year <= endYear; year++) {
+      years.push(year);
+    }
+    return years;
+  };
+
   const formatWeight = (weight, unit) => {
     if (unit === 'lb') {
       return `${weight} lb`;
