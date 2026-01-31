@@ -1172,7 +1172,8 @@ function App() {
                   type="date"
                   value={formData.catch_date}
                   onChange={(e) => setFormData({ ...formData, catch_date: e.target.value })}
-                  max={new Date().toISOString().split('T')[0]}
+                  min="2026-01-01"
+                  max="2026-12-31"
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
                   required
                   data-testid="catch-date-input"
