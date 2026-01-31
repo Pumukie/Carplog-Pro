@@ -491,7 +491,7 @@ function App() {
                 />
               </div>
               
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-slate-300 mb-2">Password</label>
                 <input
                   type="password"
@@ -504,6 +504,21 @@ function App() {
                   data-testid="auth-password-input"
                 />
               </div>
+              
+              {authMode === 'login' && (
+                <div className="mb-6">
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-5 h-5 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                      data-testid="remember-me-checkbox"
+                    />
+                    <span className="text-slate-300">Remember my login details</span>
+                  </label>
+                </div>
+              )}
               
               <button
                 type="submit"
