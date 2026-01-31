@@ -1,10 +1,10 @@
 # Carplog-Pro - Product Requirements Document
 
 ## Overview
-Carplog-Pro is a personal carp fishing diary application that allows anglers to log their catches, track statistics, and manage their fishing profile.
+Carplog-Pro is a personal carp fishing diary PWA (Progressive Web App) that allows anglers to log their catches, track statistics, and manage their fishing profile. It can be installed on phones like a native app.
 
 ## Tech Stack
-- **Frontend**: React.js with Tailwind CSS
+- **Frontend**: React.js with Tailwind CSS (PWA enabled)
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
 - **Authentication**: JWT-based
@@ -35,7 +35,22 @@ Carplog-Pro is a personal carp fishing diary application that allows anglers to 
 - Yearly comparison view
 - All weights display in lb/oz format when imperial unit selected
 
-### 5. Profile
+### 5. Analytics Dashboard
+- Total visits tracking
+- Unique visitors count
+- App installs tracking
+- Catches logged count
+- Device breakdown (mobile/desktop)
+- Page views breakdown
+- Daily visits chart (last 30 days)
+
+### 6. PWA Features
+- Installable on phones (Add to Home Screen)
+- Works offline (basic caching)
+- App icons for all device sizes
+- Standalone display mode
+
+### 7. Profile
 - Personal info (name, age, years angling, bio)
 - Gear setup (rods, reels, alarms, bobbins, bivvy, etc.)
 - Line setup (mainline, hooklink, breaking strains)
@@ -45,14 +60,47 @@ Carplog-Pro is a personal carp fishing diary application that allows anglers to 
 ## What's Been Implemented
 
 ### January 31, 2026
-1. **Weight Display Format**: Changed from decimal lb (e.g., "25.5 lb") to lb and oz format (e.g., "25 lb 8 oz")
-2. **Separate lb/oz Input**: Add Catch form now shows two separate fields for lb and oz when imperial unit selected
-3. **Remember Me Checkbox**: Login form saves credentials to localStorage when checked, auto-fills on next visit
-4. **Year Restriction**: Year selector now shows 2026 onwards only (no historical years)
-5. **Date Range**: Date picker allows selecting any date in 2026 (removed restriction to past dates only)
+1. **Weight Display Format**: Changed from decimal lb to lb/oz format
+2. **Separate lb/oz Input**: Add Catch form shows two separate fields for lb and oz
+3. **Remember Me Checkbox**: Login form saves credentials to localStorage
+4. **Year Restriction**: Year selector shows 2026 onwards only
+5. **Date Range**: Date picker allows any date in 2026
+6. **PWA Conversion**: App is now installable on phones
+7. **Analytics Dashboard**: Custom tracker showing visits, installs, page views, device breakdown
+
+## Free Hosting Options
+
+### Option 1: Vercel (Recommended for Frontend)
+- Free tier: Unlimited deployments
+- Custom domains supported
+- Automatic HTTPS
+- Great for React apps
+
+### Option 2: Railway
+- Free tier: $5/month credit
+- Supports both frontend and backend
+- MongoDB hosting available
+
+### Option 3: Render
+- Free tier available
+- Supports Python backends
+- Auto-deploys from GitHub
+
+### Option 4: MongoDB Atlas
+- Free tier: 512MB storage
+- Perfect for small apps
+- Use with any backend host
+
+## Deployment Guide
+1. Save code to GitHub using "Save to Github" feature
+2. Create accounts on Vercel + MongoDB Atlas (both free)
+3. Deploy frontend to Vercel
+4. Deploy backend to Railway or Render
+5. Connect to MongoDB Atlas database
+6. Share the Vercel URL with friends!
 
 ## User Personas
-- **Recreational Carp Anglers**: Want to track their catches and see progress over time
+- **Recreational Carp Anglers**: Want to track their catches and see progress
 - **Competitive Anglers**: Need detailed statistics and catch records
 - **Social Anglers**: Want to share catch photos and achievements
 
@@ -75,6 +123,6 @@ Carplog-Pro is a personal carp fishing diary application that allows anglers to 
 - Catch prediction based on conditions
 
 ## Next Tasks
-- User testing and feedback collection
-- Performance optimization for large catch databases
-- Mobile responsiveness improvements
+- Deploy to free hosting
+- User testing with fishing mates
+- Performance optimization
