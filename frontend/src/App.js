@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import '@/App.css';
 import axios from 'axios';
-import { Plus, Fish, TrendingUp, Calendar, Weight, Award, Trash2, User, LogOut, LogIn, UserPlus, Save, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Fish, TrendingUp, Calendar, Weight, Award, Trash2, User, LogOut, LogIn, UserPlus, Save, ChevronDown, ChevronUp, BarChart3, Download, Smartphone, Monitor, Users } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -14,6 +14,21 @@ const removeToken = () => localStorage.removeItem('carplog_token');
 const getAuthHeaders = () => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// Analytics helper
+const trackEvent = async (eventType, page = null) => {
+  try {
+    const deviceType = /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+    await axios.post(`${API}/analytics/track`, {
+      event_type: eventType,
+      page: page,
+      device_type: deviceType,
+      user_agent: navigator.userAgent
+    });
+  } catch (e) {
+    // Silent fail for analytics
+  }
 };
 
 function App() {
