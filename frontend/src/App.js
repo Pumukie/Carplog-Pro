@@ -1194,25 +1194,53 @@ function App() {
 
                 <div>
                   <label className="block text-slate-300 mb-2">Weight (Optional)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.weight}
-                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                      className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
-                      data-testid="weight-input"
-                      placeholder="0"
-                    />
+                  <div className="flex gap-2 items-center">
                     <select
                       value={formData.weight_unit}
-                      onChange={(e) => setFormData({ ...formData, weight_unit: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, weight_unit: e.target.value, weight: '', weight_lb: '', weight_oz: '' })}
                       className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                       data-testid="weight-unit-select"
                     >
                       <option value="kg">kg</option>
-                      <option value="lb">lb</option>
+                      <option value="lb">lb/oz</option>
                     </select>
+                    {formData.weight_unit === 'kg' ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.weight}
+                        onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                        className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-100"
+                        data-testid="weight-input"
+                        placeholder="kg"
+                      />
+                    ) : (
+                      <>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={formData.weight_lb}
+                          onChange={(e) => setFormData({ ...formData, weight_lb: e.target.value })}
+                          className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                          data-testid="weight-lb-input"
+                          placeholder="lb"
+                        />
+                        <span className="text-slate-400">lb</span>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          max="15"
+                          value={formData.weight_oz}
+                          onChange={(e) => setFormData({ ...formData, weight_oz: e.target.value })}
+                          className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                          data-testid="weight-oz-input"
+                          placeholder="oz"
+                        />
+                        <span className="text-slate-400">oz</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
