@@ -303,15 +303,28 @@ function App() {
     try {
       const catchDateTime = new Date(`${formData.catch_date}T12:00:00`).toISOString();
       
+      // Calculate weight based on unit
+      let finalWeight = 0;
+      if (formData.weight_unit === 'lb') {
+        const lbs = parseFloat(formData.weight_lb) || 0;
+        const oz = parseFloat(formData.weight_oz) || 0;
+        finalWeight = lbs + (oz / 16);
+      } else {
+        finalWeight = formData.weight ? parseFloat(formData.weight) : 0;
+      }
+      
       const submitData = {
         ...formData,
-        weight: formData.weight ? parseFloat(formData.weight) : 0,
+        weight: finalWeight,
         length: formData.length ? parseFloat(formData.length) : null,
         wraps_count: formData.wraps_count ? parseInt(formData.wraps_count) : null,
         caught_at: catchDateTime
       };
       
+      // Remove temporary fields
       delete submitData.catch_date;
+      delete submitData.weight_lb;
+      delete submitData.weight_oz;
       
       await axios.post(`${API}/catches`, submitData, {
         headers: getAuthHeaders()
@@ -320,6 +333,8 @@ function App() {
       setFormData({
         fish_name: '',
         weight: '',
+        weight_lb: '',
+        weight_oz: '',
         weight_unit: 'kg',
         length: '',
         venue: '',
