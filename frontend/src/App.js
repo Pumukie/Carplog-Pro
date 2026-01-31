@@ -132,7 +132,53 @@ function App() {
       setAuthForm(prev => ({ ...prev, email: rememberedEmail, password: rememberedPassword }));
       setRememberMe(true);
     }
+    
+    // Track visit
+    trackEvent('visit');
+    
+    // PWA install prompt handler
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+    };
+    
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      trackEvent('install');
+    }
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      trackEvent('install');
+    }
+    
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
+
+  const loadAnalytics = async () => {
+    try {
+      const response = await axios.get(`${API}/analytics/stats`, {
+        headers: getAuthHeaders()
+      });
+      setAnalyticsData(response.data);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
+  };
 
   const fetchCurrentUser = async () => {
     try {
