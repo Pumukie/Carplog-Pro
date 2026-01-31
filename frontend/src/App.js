@@ -664,6 +664,14 @@ function App() {
                 Statistics
               </button>
               <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${activeTab === 'analytics' ? 'bg-emerald-700 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                data-testid="analytics-tab"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span>Analytics</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('profile')}
                 className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${activeTab === 'profile' ? 'bg-emerald-700 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
                 data-testid="profile-tab"
@@ -684,8 +692,163 @@ function App() {
         </div>
       </header>
 
+      {/* Install PWA Prompt */}
+      {showInstallPrompt && (
+        <div className="fixed bottom-24 right-4 bg-emerald-600 text-white p-4 rounded-xl shadow-lg z-50 max-w-xs" data-testid="install-prompt">
+          <div className="flex items-start space-x-3">
+            <Download className="w-6 h-6 flex-shrink-0 mt-1" />
+            <div>
+              <p className="font-semibold">Install Carplog-Pro</p>
+              <p className="text-sm text-emerald-100 mt-1">Add to your home screen for quick access!</p>
+              <div className="flex space-x-2 mt-3">
+                <button
+                  onClick={handleInstallClick}
+                  className="bg-white text-emerald-600 px-3 py-1 rounded-lg text-sm font-medium hover:bg-emerald-50"
+                  data-testid="install-btn"
+                >
+                  Install
+                </button>
+                <button
+                  onClick={() => setShowInstallPrompt(false)}
+                  className="text-emerald-200 px-3 py-1 text-sm hover:text-white"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Analytics Page */}
+        {activeTab === 'analytics' && (
+          <div data-testid="analytics-view">
+            <h2 className="text-3xl font-bold text-slate-100 mb-6">Analytics Dashboard</h2>
+            
+            {analyticsData ? (
+              <div className="space-y-6">
+                {/* Quick Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-slate-400 text-sm">Total Visits</p>
+                        <p className="text-3xl font-bold text-emerald-400" data-testid="total-visits">{analyticsData.total_visits}</p>
+                      </div>
+                      <Users className="w-10 h-10 text-emerald-500/30" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-slate-400 text-sm">Unique Visitors</p>
+                        <p className="text-3xl font-bold text-cyan-400" data-testid="unique-visitors">{analyticsData.unique_visitors}</p>
+                      </div>
+                      <User className="w-10 h-10 text-cyan-500/30" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-slate-400 text-sm">App Installs</p>
+                        <p className="text-3xl font-bold text-orange-400" data-testid="total-installs">{analyticsData.total_installs}</p>
+                      </div>
+                      <Download className="w-10 h-10 text-orange-500/30" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-slate-400 text-sm">Catches Logged</p>
+                        <p className="text-3xl font-bold text-amber-400" data-testid="catches-logged">{analyticsData.catches_logged}</p>
+                      </div>
+                      <Fish className="w-10 h-10 text-amber-500/30" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Device Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                    <h3 className="text-xl font-bold text-slate-100 mb-4">Device Breakdown</h3>
+                    <div className="space-y-3">
+                      {Object.entries(analyticsData.device_breakdown).map(([device, count]) => (
+                        <div key={device} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {device === 'mobile' ? <Smartphone className="w-5 h-5 text-emerald-400" /> : <Monitor className="w-5 h-5 text-cyan-400" />}
+                            <span className="text-slate-300 capitalize">{device}</span>
+                          </div>
+                          <span className="text-slate-100 font-semibold">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                    <h3 className="text-xl font-bold text-slate-100 mb-4">Page Views</h3>
+                    <div className="space-y-3">
+                      {Object.entries(analyticsData.page_views).length > 0 ? (
+                        Object.entries(analyticsData.page_views).map(([page, count]) => (
+                          <div key={page} className="flex items-center justify-between">
+                            <span className="text-slate-300 capitalize">{page}</span>
+                            <span className="text-slate-100 font-semibold">{count}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-500">No page views recorded yet</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daily Visits Chart */}
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl p-6">
+                  <h3 className="text-xl font-bold text-slate-100 mb-4">Daily Visits (Last 30 Days)</h3>
+                  <div className="flex items-end space-x-1 h-32">
+                    {analyticsData.daily_visits.map((day, i) => {
+                      const maxVisits = Math.max(...analyticsData.daily_visits.map(d => d.visits), 1);
+                      const height = (day.visits / maxVisits) * 100;
+                      return (
+                        <div
+                          key={i}
+                          className="flex-1 bg-emerald-500 rounded-t hover:bg-emerald-400 transition-colors cursor-pointer group relative"
+                          style={{ height: `${Math.max(height, 2)}%` }}
+                          title={`${day.date}: ${day.visits} visits`}
+                        >
+                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                            {day.visits} visits
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between mt-2 text-xs text-slate-500">
+                    <span>30 days ago</span>
+                    <span>Today</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={loadAnalytics}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Refresh Data
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-slate-800/50 backdrop-blur-sm border border-emerald-900/30 rounded-xl">
+                <BarChart3 className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+                <p className="text-slate-500">Loading analytics data...</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Profile Page */}
         {activeTab === 'profile' && (
           <div className="max-w-3xl mx-auto" data-testid="profile-view">
