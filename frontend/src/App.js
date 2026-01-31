@@ -1383,22 +1383,22 @@ function App() {
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Total Weight</p>
-                      <p className="text-3xl font-bold text-cyan-400" data-testid="year-total-weight">
-                        {convertWeight(getCurrentYearStats().total_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                      <p className="text-2xl font-bold text-cyan-400" data-testid="year-total-weight">
+                        {formatWeightFromKg(getCurrentYearStats().total_weight, displayUnit)}
                       </p>
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Average Weight</p>
-                      <p className="text-3xl font-bold text-orange-400" data-testid="year-avg-weight">
-                        {convertWeight(getCurrentYearStats().average_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                      <p className="text-2xl font-bold text-orange-400" data-testid="year-avg-weight">
+                        {formatWeightFromKg(getCurrentYearStats().average_weight, displayUnit)}
                       </p>
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Biggest Catch</p>
                       {getCurrentYearStats().biggest_catch && (
                         <div data-testid="year-biggest-catch">
-                          <p className="text-3xl font-bold text-amber-400">
-                            {convertWeight(getCurrentYearStats().biggest_catch.weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                          <p className="text-2xl font-bold text-amber-400">
+                            {formatWeightFromKg(getCurrentYearStats().biggest_catch.weight, displayUnit)}
                           </p>
                           <p className="text-slate-500 text-xs">{getCurrentYearStats().biggest_catch.fish_name || 'Unnamed'}</p>
                         </div>
@@ -1423,20 +1423,20 @@ function App() {
                           <div className="flex justify-between">
                             <span className="text-slate-400">Total:</span>
                             <span className="text-slate-100 font-semibold">
-                              {convertWeight(stat.total_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                              {formatWeightFromKg(stat.total_weight, displayUnit)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-400">Average:</span>
                             <span className="text-slate-100 font-semibold">
-                              {convertWeight(stat.average_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                              {formatWeightFromKg(stat.average_weight, displayUnit)}
                             </span>
                           </div>
                           {stat.biggest_catch && (
                             <div className="mt-3 pt-3 border-t border-slate-700">
                               <p className="text-amber-400 text-xs mb-1">Biggest:</p>
                               <p className="text-amber-300 font-bold">
-                                {convertWeight(stat.biggest_catch.weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                                {formatWeightFromKg(stat.biggest_catch.weight, displayUnit)}
                               </p>
                               <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
                             </div>
