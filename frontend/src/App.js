@@ -59,6 +59,11 @@ function App() {
   const [modalImage, setModalImage] = useState(null);
   const [loading, setLoading] = useState(false);
   
+  // Analytics state
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  
   // Profile expanded sections
   const [expandedSections, setExpandedSections] = useState({
     personal: true,
