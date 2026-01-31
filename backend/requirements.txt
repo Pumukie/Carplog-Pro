@@ -9,3 +9,4 @@ python-multipart==0.0.21
 pydantic==2.12.5
 python-dotenv==1.2.1
 dnspython==2.8.0
+email-validator==2.3.0
