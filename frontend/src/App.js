@@ -238,6 +238,17 @@ function App() {
     setYearlyStats([]);
     setMonthlyStats([]);
     setActiveTab('dashboard');
+    
+    // Reload remembered credentials if they exist
+    const rememberedEmail = localStorage.getItem('carplog_remembered_email');
+    const rememberedPassword = localStorage.getItem('carplog_remembered_password');
+    if (rememberedEmail && rememberedPassword) {
+      setAuthForm({ email: rememberedEmail, password: rememberedPassword, name: '' });
+      setRememberMe(true);
+    } else {
+      setAuthForm({ email: '', password: '', name: '' });
+      setRememberMe(false);
+    }
   };
 
   const handleProfileUpdate = async (e) => {
