@@ -86,6 +86,8 @@ function App() {
   const [formData, setFormData] = useState({
     fish_name: '',
     weight: '',
+    weight_lb: '',
+    weight_oz: '',
     weight_unit: 'kg',
     length: '',
     venue: '',
@@ -97,7 +99,7 @@ function App() {
     catch_date: new Date().toISOString().split('T')[0]
   });
 
-  // Check authentication on mount
+  // Check authentication on mount - also load remembered credentials
   useEffect(() => {
     const token = getToken();
     if (token) {
