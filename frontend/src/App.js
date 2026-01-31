@@ -415,6 +415,9 @@ function App() {
         headers: getAuthHeaders()
       });
       
+      // Track catch logged
+      trackEvent('catch_logged');
+      
       setFormData({
         fish_name: '',
         weight: '',
