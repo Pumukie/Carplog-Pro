@@ -105,6 +105,13 @@ function App() {
     if (token) {
       fetchCurrentUser();
     }
+    // Load remembered credentials
+    const rememberedEmail = localStorage.getItem('carplog_remembered_email');
+    const rememberedPassword = localStorage.getItem('carplog_remembered_password');
+    if (rememberedEmail && rememberedPassword) {
+      setAuthForm(prev => ({ ...prev, email: rememberedEmail, password: rememberedPassword }));
+      setRememberMe(true);
+    }
   }, []);
 
   const fetchCurrentUser = async () => {
