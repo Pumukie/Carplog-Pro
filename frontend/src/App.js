@@ -1469,20 +1469,20 @@ function App() {
                           <div className="flex justify-between">
                             <span className="text-slate-400">Total Weight:</span>
                             <span className="text-slate-100 font-semibold">
-                              {convertWeight(stat.total_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                              {formatWeightFromKg(stat.total_weight, displayUnit)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-400">Average:</span>
                             <span className="text-slate-100 font-semibold">
-                              {convertWeight(stat.average_weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                              {formatWeightFromKg(stat.average_weight, displayUnit)}
                             </span>
                           </div>
                           {stat.biggest_catch && (
                             <div className="mt-3 pt-3 border-t border-slate-700">
                               <p className="text-amber-400 text-xs mb-1">Biggest Catch:</p>
                               <p className="text-amber-300 font-bold">
-                                {convertWeight(stat.biggest_catch.weight, 'kg', displayUnit).toFixed(2)} {displayUnit}
+                                {formatWeightFromKg(stat.biggest_catch.weight, displayUnit)}
                               </p>
                               <p className="text-slate-500 text-xs">{stat.biggest_catch.fish_name || 'Unnamed'}</p>
                             </div>
