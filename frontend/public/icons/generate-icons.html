@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+<script>
+// Generate SVG icon for Carplog-Pro (fish icon)
+const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+function generateIcon(size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    
+    // Background - dark slate
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Fish icon - emerald green
+    ctx.fillStyle = '#10b981';
+    const scale = size / 100;
+    ctx.translate(size/2 - 30*scale, size/2 - 25*scale);
+    ctx.scale(scale, scale);
+    
+    // Simple fish shape
+    ctx.beginPath();
+    // Body
+    ctx.ellipse(30, 25, 25, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Tail
+    ctx.beginPath();
+    ctx.moveTo(50, 25);
+    ctx.lineTo(65, 10);
+    ctx.lineTo(65, 40);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Eye
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(18, 22, 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    return canvas.toDataURL('image/png');
+}
+
+sizes.forEach(size => {
+    const dataUrl = generateIcon(size);
+    const link = document.createElement('a');
+    link.download = `icon-${size}.png`;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+});
+</script>
+</body>
+</html>
