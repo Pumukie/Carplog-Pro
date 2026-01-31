@@ -424,6 +424,86 @@ async def get_yearly_stats(current_user: dict = Depends(get_current_user)):
     
     return stats
 
+# Analytics Models
+class AnalyticsEvent(BaseModel):
+    event_type: str  # 'visit', 'install', 'page_view', 'catch_logged'
+    page: Optional[str] = None
+    device_type: Optional[str] = None
+    user_agent: Optional[str] = None
+
+class AnalyticsResponse(BaseModel):
+    total_visits: int
+    unique_visitors: int
+    total_installs: int
+    catches_logged: int
+    page_views: dict
+    device_breakdown: dict
+    daily_visits: list
+
+# Analytics Routes
+@api_router.post("/analytics/track")
+async def track_event(event: AnalyticsEvent):
+    """Track an analytics event"""
+    visitor_id = str(uuid.uuid4())  # In real app, would use cookie/fingerprint
+    
+    doc = {
+        "event_type": event.event_type,
+        "page": event.page,
+        "device_type": event.device_type,
+        "user_agent": event.user_agent,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "visitor_id": visitor_id
+    }
+    
+    await db.analytics.insert_one(doc)
+    return {"status": "tracked"}
+
+@api_router.get("/analytics/stats", response_model=AnalyticsResponse)
+async def get_analytics_stats(current_user: dict = Depends(get_current_user)):
+    """Get analytics statistics (admin only for now)"""
+    
+    # Get all analytics events
+    events = await db.analytics.find({}, {"_id": 0}).to_list(100000)
+    
+    total_visits = len([e for e in events if e.get('event_type') == 'visit'])
+    unique_visitors = len(set([e.get('visitor_id') for e in events if e.get('visitor_id')]))
+    total_installs = len([e for e in events if e.get('event_type') == 'install'])
+    catches_logged = len([e for e in events if e.get('event_type') == 'catch_logged'])
+    
+    # Page views breakdown
+    page_views = {}
+    for e in events:
+        if e.get('event_type') == 'page_view' and e.get('page'):
+            page = e['page']
+            page_views[page] = page_views.get(page, 0) + 1
+    
+    # Device breakdown
+    device_breakdown = {}
+    for e in events:
+        device = e.get('device_type', 'unknown')
+        device_breakdown[device] = device_breakdown.get(device, 0) + 1
+    
+    # Daily visits (last 30 days)
+    daily_visits = []
+    today = datetime.now(timezone.utc).date()
+    for i in range(30):
+        day = today - timedelta(days=i)
+        day_str = day.isoformat()
+        count = len([e for e in events if e.get('timestamp', '').startswith(day_str) and e.get('event_type') == 'visit'])
+        daily_visits.append({"date": day_str, "visits": count})
+    
+    daily_visits.reverse()
+    
+    return AnalyticsResponse(
+        total_visits=total_visits,
+        unique_visitors=unique_visitors,
+        total_installs=total_installs,
+        catches_logged=catches_logged,
+        page_views=page_views,
+        device_breakdown=device_breakdown,
+        daily_visits=daily_visits
+    )
+
 # Include the router
 app.include_router(api_router)
 
