@@ -232,6 +232,14 @@ function App() {
     }
   }, [isAuthenticated, selectedYear, dashboardYear, dashboardMonth, loadData]);
 
+  // Track page views when tab changes
+  useEffect(() => {
+    trackEvent('page_view', activeTab);
+    if (activeTab === 'analytics' && isAuthenticated) {
+      loadAnalytics();
+    }
+  }, [activeTab, isAuthenticated]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setAuthLoading(true);
