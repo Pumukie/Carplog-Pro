@@ -362,10 +362,9 @@ function App() {
   };
 
   const getAvailableYears = () => {
-    const baseYear = 2026;
+    const startYear = 2026;
     const currentYear = new Date().getFullYear();
-    const startYear = baseYear - 5;
-    const endYear = Math.max(baseYear + 5, currentYear + 5);
+    const endYear = Math.max(startYear + 10, currentYear + 5);
     
     const years = [];
     for (let year = startYear; year <= endYear; year++) {
