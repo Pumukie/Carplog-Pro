@@ -30,6 +30,7 @@ function App() {
     password: '',
     name: ''
   });
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [catches, setCatches] = useState([]);
