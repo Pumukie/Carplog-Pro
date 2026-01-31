@@ -180,6 +180,15 @@ function App() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       
+      // Handle remember me
+      if (rememberMe) {
+        localStorage.setItem('carplog_remembered_email', authForm.email);
+        localStorage.setItem('carplog_remembered_password', authForm.password);
+      } else {
+        localStorage.removeItem('carplog_remembered_email');
+        localStorage.removeItem('carplog_remembered_password');
+      }
+      
       setToken(response.data.access_token);
       await fetchCurrentUser();
       setAuthForm({ email: '', password: '', name: '' });
