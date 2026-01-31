@@ -356,10 +356,26 @@ function App() {
   };
 
   const formatWeight = (weight, unit) => {
+    if (!weight) return unit === 'lb' ? '0 lb 0 oz' : '0 kg';
     if (unit === 'lb') {
-      return `${weight} lb`;
+      const totalOz = weight * 16;
+      const lbs = Math.floor(totalOz / 16);
+      const oz = Math.round(totalOz % 16);
+      return `${lbs} lb ${oz} oz`;
     }
     return `${weight} kg`;
+  };
+
+  const formatWeightFromKg = (weightKg, toUnit) => {
+    if (!weightKg) return toUnit === 'lb' ? '0 lb 0 oz' : '0 kg';
+    if (toUnit === 'lb') {
+      const weightLb = weightKg * 2.20462;
+      const totalOz = weightLb * 16;
+      const lbs = Math.floor(totalOz / 16);
+      const oz = Math.round(totalOz % 16);
+      return `${lbs} lb ${oz} oz`;
+    }
+    return `${weightKg.toFixed(2)} kg`;
   };
 
   const convertWeight = (weight, fromUnit, toUnit) => {
