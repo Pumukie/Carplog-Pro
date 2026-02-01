@@ -34,15 +34,11 @@ db = client[os.environ['DB_NAME']]
 # Create the main app
 app = FastAPI(title="Carplog-Pro API")
 
-# CORS - Allow Netlify frontend
+# CORS - Allow all origins for simplicity
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://carplog-pro.netlify.app",
-        "http://localhost:3000",
-        "*"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
